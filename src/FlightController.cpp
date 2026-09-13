@@ -2,10 +2,10 @@
 #include "Receiver.h"
 
 
-FlightController::FlightController(){
+FlightController::FlightController() : motorMixer(motors) {
 
 }
-FlightController::execute(){
+void FlightController::execute(){
     imu.calculateValues();
     receiver.updateReceiver();
 
@@ -23,19 +23,19 @@ FlightController::execute(){
     float requestedRollRate = rollAnglePID.exePID(requestedRollAngle - currentRollAngle);
     float requestedPitchRate = pitchAnglePID.exePID(requestedPitchAngle - currentPitchAngle);
 
-    float pitchOutput = pitchRatePID(requestedPitchRate - currentPitchRate);
-    float rollOutput = rollRatePID(requestedRollRate - currentRollRate);
-    float yawOutput = yawRatePID(requestedYawRate - currentYawRate);
+    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
+    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
+    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
 
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 }
-FlightController::executeAutonomous(){
+void FlightController::executeAutonomous(){
 
 }
-FlightController::executeHoldPosition(){
+void FlightController::executeHoldPosition(){
 
 }
-FlightController::executeRTH(){
+void FlightController::executeRTH(){
 
 }
 

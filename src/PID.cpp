@@ -10,6 +10,7 @@ PID::PID(double P, double I, double D, double dt)
   this->dt = dt;
   this->timeElapsed = 0;
   this->totalError = 0;
+  this->lastTime = 0;
 }
 
 PID::PID(double P, double I, double D)
@@ -21,6 +22,7 @@ PID::PID(double P, double I, double D)
   lastI = 0;
   this->timeElapsed = 0;
   this->totalError = 0;
+  this->lastTime = 0;
   // dt = 0.004;
 }
 
@@ -33,6 +35,7 @@ PID::PID()
   lastI = 0;
   this->timeElapsed = 0;
   this->totalError = 0;
+  this->lastTime = 0;
   // dt = 0.004;
 }
 
@@ -68,9 +71,10 @@ double PID::exePID(double error, double dt2)
  */
 double PID::exePID(double error)
 {
-  currentTime = millis();
-  double dt = millis() - currentTime;
-  currentTime = millis();
+  unsigned long now = millis();
+  double dt = (now - lastTime) / 1000.0; // seconds since last call
+  lastTime = now;
+  if (dt <= 0) dt = 0.001; // avoid divide-by-zero on the first / back-to-back calls
 
   double result = 0;
   double pResult = error * P;
@@ -85,6 +89,6 @@ double PID::exePID(double error)
 }
 void PID::resetPID()
 {
-  lastI = 0f;
+  lastI = 0;
   lastError = 0;
 }

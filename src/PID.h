@@ -26,6 +26,7 @@ private:
   double totalError;
   double dt;
   double timeElapsed;
+  unsigned long lastTime;
 };
 
 #endif

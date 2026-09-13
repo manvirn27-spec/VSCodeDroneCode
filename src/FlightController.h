@@ -18,20 +18,17 @@ class FlightController{
     void executeAutonomous();
     void executeRTH();
   private:
-    Servo mot1;
-    Servo mot2;
-    Servo mot3;
-    Servo mot4;
-    
-    IMU imu;
+    Servo motors[4];
+
+    IMU imu{0.98};
     GPS gps;
-    MotorMixer motorMixer(mot1, mot2, mot3, mot4);
-    PID rollAnglePID(1, 1, 1);
-    PID pitchAnglePID(1, 1, 1);
-    PID yawAnglePID(1, 1, 1);
-    PID rollRatePID(1, 1, 1);
-    PID pitchRatePID(1, 1, 1);
-    PID yawRatePID(1, 1, 1);
+    MotorMixer motorMixer;
+    PID rollAnglePID{1, 1, 1};
+    PID pitchAnglePID{1, 1, 1};
+    PID yawAnglePID{1, 1, 1};
+    PID rollRatePID{1, 1, 1};
+    PID pitchRatePID{1, 1, 1};
+    PID yawRatePID{1, 1, 1};
     Receiver receiver;
 
     double requestedRollAngle;
@@ -54,6 +51,6 @@ class FlightController{
     double currentVeloX;
     double currentVeloY;
     double currentVeloZ;
+};
 
-
-}
+#endif
