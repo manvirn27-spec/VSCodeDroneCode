@@ -39,3 +39,11 @@ void MotorMixer::spinMotors(int throttle, int rollControl, int pitchControl, int
   motors[2].writeMicroseconds(MotorInput3); 
   motors[3].writeMicroseconds(MotorInput4);
 }
+
+// Commands all motors to the cutoff value (used while disarmed).
+void MotorMixer::stopMotors(){
+  int ThrottleCutOff=1000;
+  for(int i = 0; i < 4; i++){
+    motors[i].writeMicroseconds(ThrottleCutOff);
+  }
+}

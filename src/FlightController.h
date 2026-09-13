@@ -17,7 +17,20 @@ class FlightController{
     void executeHoldPosition();
     void executeAutonomous();
     void executeRTH();
+
+    bool isArmed();
   private:
+    // Arm switch configuration (CRSF channel values are ~1000-2000us)
+    static const int ARM_SWITCH_THRESHOLD = 1500; // aux above this = switch ON
+    static const int ARM_THROTTLE_MAX = 1050;     // throttle must be below this to arm
+
+    void updateArmState();
+    void arm();
+    void disarm();
+
+    bool armed = false;
+    bool armSwitchWasOn = false; // previous switch position, used to detect OFF->ON edges
+
     Servo motors[4];
 
     IMU imu{0.98};

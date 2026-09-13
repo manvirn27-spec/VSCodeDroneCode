@@ -19,6 +19,7 @@ class Receiver{
 
     void updateReceiver();
     void begin(int TX, int RX);
+    bool isLinkUp();
 
     Receiver(); 
   private:

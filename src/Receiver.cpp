@@ -53,3 +53,6 @@ void Receiver::begin(int TX, int RX){
     crsf.begin(crsfSerial);
 
 }
+bool Receiver::isLinkUp() {
+    return crsf.isLinkUp();
+}

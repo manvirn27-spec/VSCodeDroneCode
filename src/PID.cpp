@@ -91,4 +91,6 @@ void PID::resetPID()
 {
   lastI = 0;
   lastError = 0;
+  totalError = 0;
+  lastTime = millis(); // so the first dt after a reset is small, not the whole disarmed period
 }

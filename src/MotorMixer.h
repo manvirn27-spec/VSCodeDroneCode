@@ -6,6 +6,7 @@ class MotorMixer{
   public:
     MotorMixer(Servo servos[]);
     void spinMotors(int throttle, int rollControl, int pitchControl, int yawControl);
+    void stopMotors();
   private:
     Servo motors[4];
 };
