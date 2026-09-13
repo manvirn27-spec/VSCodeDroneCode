@@ -1,6 +1,6 @@
 #include "Receiver.h"
 
-int throttle = 899;
+int throttle = 900;
 int roll = 1500;
 int pitch = 1500;
 int yaw = 1500;
