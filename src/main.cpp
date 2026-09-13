@@ -1,16 +1,21 @@
 #include <Arduino.h>
-#include "IMU.h"
+#include "Peripherals/IMU.h"
+#include "Peripherals/Barometer.h"
 
-IMU imu(0.98);
+IMU imu(0.9);
+Barometer baro;
 
 void setup() {
   Serial.begin(115200);
-  imu.setupIMU();
-  imu.calibrateIMU();
+  //imu.setupIMU(); SUCCESS
+  baro.begin();
 }
 
 void loop() {
-  imu.calculateValues();
-  imu.printValues();
-  delay(100);
+  //imu.update(); SUCCESS
+  //imu.printValues(); SUCCESS
+  baro.update();
+  baro.printAll();
+  delay(1000);
+
 }

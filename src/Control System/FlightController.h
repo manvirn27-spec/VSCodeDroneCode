@@ -3,11 +3,11 @@
 
 #include <Arduino.h>
 #include <ESP32Servo.h>
-#include "GPS.h"
-#include "IMU.h"
+#include "Peripherals/GPS.h"
+#include "Peripherals/IMU.h"
 #include "MotorMixer.h"
 #include "PID.h"
-#include "Receiver.h"
+#include "Peripherals/Receiver.h"
 
 class FlightController{
   public:

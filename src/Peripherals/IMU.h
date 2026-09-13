@@ -2,9 +2,8 @@
 #define IMU_H
 
 #include <Arduino.h>
-#include "IMU.h"
 #include <Math.h>
-#include <adafruit_lsmd6s.h>
+#include <Adafruit_LSM6DSOX.h>
 #include <Wire.h>
 
 
@@ -27,7 +26,7 @@ class IMU{
 
   private:
     Adafruit_LSM6DSOX imu;
-    double alphaGyro = 0.9;
+    double alphaGyro;
     
     double rollRate;
     double pitchRate;
@@ -35,11 +34,11 @@ class IMU{
     double rollAngle;
     double pitchAngle;
 
-    double alphaGyro;
-
     double rateCalibrationRoll;
     double rateCalibrationPitch;
     double rateCalibrationYaw;
+
+    float temperature;
 };
 
 #endif

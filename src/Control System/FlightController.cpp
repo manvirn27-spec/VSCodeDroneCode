@@ -1,12 +1,10 @@
 #include "FlightController.h"
-#include "Receiver.h"
-
 
 FlightController::FlightController() : motorMixer(motors) {
 
 }
 void FlightController::execute(){
-    imu.calculateValues();
+    imu.update();
     receiver.updateReceiver();
 
     updateArmState();
