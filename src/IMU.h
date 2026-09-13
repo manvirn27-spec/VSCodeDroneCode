@@ -2,11 +2,17 @@
 #define IMU_H
 
 #include <Arduino.h>
+#include "IMU.h"
+#include <Math.h>
+#include <adafruit_lsmd6s.h>
+#include <Wire.h>
+
+
 
 class IMU{
   public:
     IMU(double alpha);
-    void calculateValues();
+    void update();
     void setupIMU();
     void calibrateIMU();
 
@@ -15,10 +21,14 @@ class IMU{
     double getYawRate();
     double getRollAngle();
     double getPitchAngle();
+    double getTemperature();
 
     void printValues();
 
   private:
+    Adafruit_LSM6DSOX imu;
+    double alphaGyro = 0.9;
+    
     double rollRate;
     double pitchRate;
     double yawRate;
