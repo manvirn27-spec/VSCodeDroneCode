@@ -8,7 +8,12 @@ void Barometer::begin(){
 
     lps.setDataRate(LPS25_RATE_25_HZ);
     update();
-    initialPressure = getPressure();
+    for(int i = 0; i < 100; i++){
+        initialPressure += getPressure();
+        delay(10);
+    }
+    initialPressure /= 100;
+    
 }
 void Barometer::update(){
     sensors_event_t temp;
@@ -22,9 +27,7 @@ void Barometer::update(){
     altitude = temperatureK/0.0065 * (1 - std::pow(this->pressure/initialPressure, 0.1903));
 }
 
-float Barometer::getAltitude(float pressure){
-    return altitude;
-} 
+float Barometer::getAltitude(float pressure){return altitude;} 
 float Barometer::getPressure(){return pressure;}
 float Barometer::getTemperature(){return temperature;}
 
