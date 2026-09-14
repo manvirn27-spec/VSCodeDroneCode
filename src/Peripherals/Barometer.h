@@ -5,6 +5,7 @@
 #include <Adafruit_LPS2X.h>
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
+#include <cmath>
 
 class Barometer{
     public:
@@ -18,7 +19,7 @@ class Barometer{
         void printAll();
     private:
         Adafruit_LPS25 lps;
-        float initialAltitude;
+        float initialPressure;
         float altitude;
         float pressure;
         float temperature;

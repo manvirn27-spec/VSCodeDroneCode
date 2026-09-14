@@ -8,21 +8,23 @@ void Barometer::begin(){
 
     lps.setDataRate(LPS25_RATE_25_HZ);
     update();
-    initialAltitude = getAltitude(getPressure());
+    initialPressure = getPressure();
 }
 void Barometer::update(){
     sensors_event_t temp;
     sensors_event_t pressure;
     lps.getEvent(&pressure, &temp);// get pressure
+
     this->temperature = temp.temperature;
     this->pressure = pressure.pressure;
+
+    float temperatureK = temperature + 273.15f;
+    altitude = temperatureK/0.0065 * (1 - std::pow(this->pressure/initialPressure, 0.1903));
 }
 
 float Barometer::getAltitude(float pressure){
-    this->altitude = 0.f;
-    return altitude;} 
-//needs implementation. 
-//Note, pressure sensor can only give relative alittude to starting point. Use GPS for absolute
+    return altitude;
+} 
 float Barometer::getPressure(){return pressure;}
 float Barometer::getTemperature(){return temperature;}
 
