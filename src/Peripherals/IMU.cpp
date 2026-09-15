@@ -25,11 +25,11 @@ void IMU::update(){
   temperature = temp.temperature;
 
   rollRate = gyro.gyro.y * alphaGyro + (1 - alphaGyro) * rollRate;
-  pitchRate = gyro.gyro.x * alphaGyro + (1 - alphaGyro) * pitchRate;
-  yawRate = gyro.gyro.z * alphaGyro + (1 - alphaGyro) * yawRate;
+  pitchRate = -(gyro.gyro.x * alphaGyro + (1 - alphaGyro) * pitchRate);
+  yawRate = -(gyro.gyro.z * alphaGyro + (1 - alphaGyro) * yawRate);
 
-  rollAngle = atan(accel.acceleration.y/sqrt(accel.acceleration.x*accel.acceleration.x+accel.acceleration.z*accel.acceleration.z))/(3.142/180);
-  pitchAngle = -atan(accel.acceleration.x/sqrt(accel.acceleration.y*accel.acceleration.y+accel.acceleration.z*accel.acceleration.z))/(3.142/180);
+  pitchAngle = -atan(accel.acceleration.y/sqrt(accel.acceleration.x*accel.acceleration.x+accel.acceleration.z*accel.acceleration.z))/(3.142/180);
+  rollAngle = -atan(accel.acceleration.x/sqrt(accel.acceleration.y*accel.acceleration.y+accel.acceleration.z*accel.acceleration.z))/(3.142/180);
 
   //filter the rollangle using Kalman
 }

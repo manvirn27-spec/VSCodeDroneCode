@@ -25,10 +25,34 @@ void LED::indicateBattery(float voltage){
         //emergency reduce power
 }
 void LED::indicateFaults(int faultNumber){
-    //blink number of faults quickly, then 2 second pause. MUST BE NONBLOCKING
+    if (faultNumber <= 0) {
+        digitalWrite(pinNums[0], LOW);
+        blinkCountFault = 0;
+        ledStateFault = false;
+        return;
+    }
+
+    unsigned long currentTime = millis();
+
+    // Active fault blinking phase (200 ms ON / 200 ms OFF)
+    if (blinkCountFault < faultNumber * 2) {
+        if (currentTime - lastTimeFault >= 200) {
+            lastTimeFault = currentTime;
+            ledStateFault = !ledStateFault;
+            digitalWrite(pinNums[0], ledStateFault ? HIGH : LOW);
+            blinkCountFault++;
+        }
+    } 
+    // Pause phase after finishing blinks (2000 ms pause before repeating)
+    else {
+        if (currentTime - lastTimeFault >= 2000) {
+            lastTimeFault = currentTime;
+            blinkCountFault = 0; // Reset count to restart cycle
+        }
+    }
 }
 void LED::indicateGPS(int numSatelites){
-    //Indicate number of satelites
+    //Indicate number of satelites. Blink quickly for 0-3, semi quick for 3-5, slow for 6-7, solid for 8+. 2 second delay between signaliging, 200ms delay between blink
 }
 void LED::indicateStartup(){
     unsigned long currentMillis = millis();

@@ -3,15 +3,19 @@
 
 #include <Arduino.h>
 #include <ESP32Servo.h>
-#include "Peripherals/GPS.h"
-#include "Peripherals/IMU.h"
+
 #include "MotorMixer.h"
 #include "PID.h"
+
+#include "Peripherals/GPS.h"
+#include "Peripherals/IMU.h"
 #include "Peripherals/Receiver.h"
+#include "Peripherals/Barometer.h"
+#include "Peripherals/LED.h"
 
 class FlightController{
   public:
-    FlightController();
+    void begin();
 
     void execute();
     void executeHoldPosition();
@@ -26,7 +30,7 @@ class FlightController{
 
     void updateArmState();
     void arm();
-    void disarm();
+    int disarm();
 
     bool armed = false;
     bool armSwitchWasOn = false; // previous switch position, used to detect OFF->ON edges
@@ -35,14 +39,18 @@ class FlightController{
 
     IMU imu{0.98};
     GPS gps;
-    MotorMixer motorMixer;
+    Barometer baro;
+    Receiver receiver;
+    LED leds;
+
+
+    MotorMixer motorMixer{39, 40, 41, 42};
     PID rollAnglePID{1, 1, 1};
     PID pitchAnglePID{1, 1, 1};
     PID yawAnglePID{1, 1, 1};
     PID rollRatePID{1, 1, 1};
     PID pitchRatePID{1, 1, 1};
     PID yawRatePID{1, 1, 1};
-    Receiver receiver;
 
     double requestedRollAngle;
     double requestedPitchAngle;

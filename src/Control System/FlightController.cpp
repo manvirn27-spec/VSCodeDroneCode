@@ -1,11 +1,22 @@
 #include "FlightController.h"
 
-FlightController::FlightController() : motorMixer(motors) {
 
+void FlightController::begin(){
+    delay(3000); //to let user put the drone down
+    leds.begin();
+    leds.indicateStartup();
+
+    imu.setupIMU();
+    baro.begin();
+    receiver.begin();
+
+    delay(2000);
 }
+
 void FlightController::execute(){
     imu.update();
-    receiver.updateReceiver();
+    receiver.update();
+    baro.update();
 
     updateArmState();
     if (!armed) {
@@ -48,8 +59,9 @@ bool FlightController::isArmed(){
  *
  * Disarming happens immediately when the switch goes OFF or the link is lost.
  */
+
 void FlightController::updateArmState(){
-    bool armSwitchOn = receiver.isLinkUp() && receiver.getAux1() > ARM_SWITCH_THRESHOLD;
+    bool armSwitchOn = receiver.isLinkUp() && receiver.getSA() > ARM_SWITCH_THRESHOLD;
 
     if (armed) {
         if (!armSwitchOn) {
@@ -78,9 +90,10 @@ void FlightController::arm(){
     armed = true;
 }
 
-void FlightController::disarm(){
+int FlightController::disarm(){
     armed = false;
     motorMixer.stopMotors();
+    return 0;
 }
 void FlightController::executeAutonomous(){
 
