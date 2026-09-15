@@ -11,6 +11,9 @@ class LED{
         void indicateBattery(float voltage);
         void indicateGPS(int satelites);
         void indicateFaults(int faultNumber);
+
+        void allOff();
+        void allOn();
     private:
         int pinNums[5] = {16, 15, 14, 13, 12};
     // Startup sequence state variables

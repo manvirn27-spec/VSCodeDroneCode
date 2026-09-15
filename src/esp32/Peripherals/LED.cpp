@@ -10,7 +10,7 @@ void LED::begin(){
 
 void LED::indicateBattery(float voltage){
     if(voltage > 11.88){
-        //full - 75%
+        digitalWrite(pinNums[1], HIGH);
     } else if(voltage > 11.55){
         //75% - 50%
     } else if(voltage > 11.28){
@@ -18,9 +18,7 @@ void LED::indicateBattery(float voltage){
     } else if(voltage > 9.90){
         //25% - 0% (should never be near zero)
     } else{
-        for(int i = 0; i < 5; i++){
-            digitalWrite(pinNums[i], LOW);
-        }
+        digitalWrite(pinNums[1], LOW);
     }
         //emergency reduce power
 }
@@ -31,7 +29,6 @@ void LED::indicateFaults(int faultNumber){
         ledStateFault = false;
         return;
     }
-
     unsigned long currentTime = millis();
 
     // Active fault blinking phase (200 ms ON / 200 ms OFF)
@@ -80,5 +77,16 @@ void LED::indicateStartup(){
         if (currentLedIndexStartup > 5) {
             currentLedIndexStartup = 0;
         }
+    }
+}
+
+void LED::allOff(){
+    for (int i = 0; i < 5; i++){
+        digitalWrite(pinNums[i], LOW);
+    }
+}
+void LED::allOn(){
+    for (int i = 0; i < 5; i++){
+        digitalWrite(pinNums[i], LOW);
     }
 }

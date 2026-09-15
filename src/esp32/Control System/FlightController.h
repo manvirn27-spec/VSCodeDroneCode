@@ -25,13 +25,16 @@ class FlightController{
     bool isArmed();
   private:
     // Arm switch configuration (CRSF channel values are ~1000-2000us)
-    static const int ARM_SWITCH_THRESHOLD = 1500; // aux above this = switch ON
+    static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
     static const int ARM_THROTTLE_MAX = 1050;     // throttle must be below this to arm
 
     void updateArmState();
     void arm();
     int disarm();
 
+    void updateFaults();
+
+    int faultNumber = 0;
     bool armed = false;
     bool armSwitchWasOn = false; // previous switch position, used to detect OFF->ON edges
 
@@ -45,12 +48,11 @@ class FlightController{
 
 
     MotorMixer motorMixer{39, 40, 41, 42};
-    PID rollAnglePID{1, 1, 1};
-    PID pitchAnglePID{1, 1, 1};
-    PID yawAnglePID{1, 1, 1};
-    PID rollRatePID{1, 1, 1};
-    PID pitchRatePID{1, 1, 1};
-    PID yawRatePID{1, 1, 1};
+    PID rollAnglePID{1.1, 0, 0};
+    PID pitchAnglePID{1.1, 0, 0};
+    PID rollRatePID{0.45, 2, 0.02};
+    PID pitchRatePID{0.45, 2, 0.02};
+    PID yawRatePID{3.f, 12.f, 0};
 
     double requestedRollAngle;
     double requestedPitchAngle;

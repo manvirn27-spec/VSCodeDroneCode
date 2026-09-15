@@ -3,26 +3,32 @@
 
 void FlightController::begin(){
     delay(3000); //to let user put the drone down
+
     leds.begin();
     leds.indicateStartup();
 
     imu.setupIMU();
     baro.begin();
     receiver.begin();
-
-    delay(2000);
 }
 
 void FlightController::execute(){
+    leds.indicateBattery(11.9);
+    leds.indicateFaults(2);
+    leds.indicateGPS(0);
+    
+
     imu.update();
     receiver.update();
     baro.update();
 
     updateArmState();
+    //Serial.println(armed);
     if (!armed) {
         motorMixer.stopMotors();
         return;
     }
+    updateFaults();
 
     this->requestedRollAngle = receiver.getRoll();
     this->requestedPitchAngle = receiver.getPitch();
@@ -61,7 +67,7 @@ bool FlightController::isArmed(){
  */
 
 void FlightController::updateArmState(){
-    bool armSwitchOn = receiver.isLinkUp() && receiver.getSA() > ARM_SWITCH_THRESHOLD;
+    bool armSwitchOn = receiver.isLinkUp() && receiver.getSA() < ARM_SWITCH_THRESHOLD;
 
     if (armed) {
         if (!armSwitchOn) {
@@ -95,6 +101,8 @@ int FlightController::disarm(){
     motorMixer.stopMotors();
     return 0;
 }
+
+void FlightController::updateFaults(){}
 void FlightController::executeAutonomous(){
 
 }

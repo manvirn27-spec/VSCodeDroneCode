@@ -2,12 +2,11 @@
 #include "Peripherals/IMU.h"
 #include "Peripherals/Barometer.h"
 #include "Peripherals/LED.h"
+#include "Peripherals/Receiver.h"
 #include "Control System/FlightController.h" //Ultimately only include file
 
-IMU imu(0.9);
-Barometer baro;
-LED leds;
 FlightController fc;
+//Receiver elrs;
 
 
 void setup() {
@@ -16,6 +15,7 @@ void setup() {
   //leds.begin();
   //baro.begin();
   fc.begin();
+  //elrs.begin();
 
 }
 
@@ -26,4 +26,6 @@ void loop() {
   //baro.update(); 
   //baro.printAll(); 
   fc.execute();
+  //elrs.update();
+  //elrs.printAll();
 }
