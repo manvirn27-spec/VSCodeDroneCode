@@ -1,11 +1,12 @@
 #include "FlightController.h"
 
-
 void FlightController::begin(){
     delay(3000); //to let user put the drone down
 
     leds.begin();
     leds.indicateStartup();
+    //motorMixer.calibrateMotors();
+    motorMixer.stopMotors();
 
     imu.setupIMU();
     baro.begin();
@@ -89,7 +90,6 @@ void FlightController::arm(){
     // control outputs after arming start from a clean state.
     rollAnglePID.resetPID();
     pitchAnglePID.resetPID();
-    yawAnglePID.resetPID();
     rollRatePID.resetPID();
     pitchRatePID.resetPID();
     yawRatePID.resetPID();

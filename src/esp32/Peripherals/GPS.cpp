@@ -29,7 +29,7 @@ void GPS::initCompass(){
  delay(10);
 }
 
-void GPS::setup(){
+void GPS::begin(){
   Wire.begin(I2C_SDA, I2C_SCL);
   GPSSerial.begin(GPSBaud, SERIAL_8N1, RXPin, TXPin);
   initCompass();

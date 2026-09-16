@@ -43,3 +43,13 @@ void MotorMixer::stopMotors(){
     motors[i].writeMicroseconds(1000);
   }
 }
+
+void MotorMixer::calibrateMotors(){
+  for(int i = 0; i < 4; i++){
+    motors[i].writeMicroseconds(2000);
+  }
+  delay(2000);
+  for(int i = 0; i < 4; i++){
+    motors[i].writeMicroseconds(1000);
+  }
+}

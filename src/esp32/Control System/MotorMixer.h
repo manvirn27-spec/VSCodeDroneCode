@@ -8,6 +8,8 @@ class MotorMixer{
     
     void spinMotors(int throttle, int rollControl, int pitchControl, int yawControl);
     void stopMotors();
+
+    void calibrateMotors();
   private:
     Servo motors[4];
 };

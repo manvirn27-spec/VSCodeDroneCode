@@ -11,7 +11,7 @@ class GPS{
     GPS();
     bool update();
     void initCompass();
-    void setup();
+    void begin();
     void readCompass(int16_t &x, int16_t &y, int16_t &z);
     float getHeading(float x, float y);
 

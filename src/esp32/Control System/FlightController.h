@@ -7,11 +7,11 @@
 #include "MotorMixer.h"
 #include "PID.h"
 
-#include "Peripherals/GPS.h"
-#include "Peripherals/IMU.h"
-#include "Peripherals/Receiver.h"
-#include "Peripherals/Barometer.h"
-#include "Peripherals/LED.h"
+#include "../Peripherals/GPS.h"
+#include "../Peripherals/IMU.h"
+#include "../Peripherals/Receiver.h"
+#include "../Peripherals/Barometer.h"
+#include "../Peripherals/LED.h"
 
 class FlightController{
   public:
