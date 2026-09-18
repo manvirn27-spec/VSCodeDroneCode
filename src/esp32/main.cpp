@@ -41,7 +41,7 @@ void loop() {
   //leds.indicateStartup();
   //baro.update(); 
   //baro.printAll(); 
-  fc.execute();
+  fc.executeRate();
   //elrs.update();
   //elrs.printAll();
 }

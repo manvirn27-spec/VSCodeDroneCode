@@ -17,7 +17,8 @@ class FlightController{
   public:
     void begin();
 
-    void execute();
+    void executeAngle();
+    void executeRate();
     void executeHoldPosition();
     void executeAutonomous();
     void executeRTH();

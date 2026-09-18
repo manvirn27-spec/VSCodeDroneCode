@@ -5,7 +5,7 @@ void FlightController::begin(){
 
     leds.begin();
     leds.indicateStartup();
-    //motorMixer.calibrateMotors();
+    motorMixer.calibrateMotors();
     motorMixer.stopMotors();
 
     imu.setupIMU();
@@ -13,7 +13,7 @@ void FlightController::begin(){
     receiver.begin();
 }
 
-void FlightController::execute(){
+void FlightController::executeAngle(){
     leds.indicateBattery(11.9);
     leds.indicateFaults(2);
     leds.indicateGPS(0);
@@ -44,6 +44,45 @@ void FlightController::execute(){
 
     float requestedRollRate = rollAnglePID.exePID(requestedRollAngle - currentRollAngle);
     float requestedPitchRate = pitchAnglePID.exePID(requestedPitchAngle - currentPitchAngle);
+
+    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
+    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
+    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
+
+    motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
+}
+
+void FlightController::executeRate(){
+    leds.indicateBattery(11.9);
+    leds.indicateFaults(2);
+    leds.indicateGPS(0);
+    
+
+    imu.update();
+    receiver.update();
+    baro.update();
+
+    updateArmState();
+    //Serial.println(armed);
+    if (!armed) {
+        motorMixer.stopMotors();
+        return;
+    }
+    updateFaults();
+
+    this->requestedRollAngle = receiver.getRoll();
+    this->requestedPitchAngle = receiver.getPitch();
+    this->requestedYaw = receiver.getYaw();
+    this->requestedThrottle = receiver.getThrottle();
+
+    this->currentYawRate = imu.getYawRate();
+    this->currentPitchRate = imu.getPitchRate();
+    this->currentRollRate = imu.getRollRate();
+    this->currentRollAngle = imu.getRollAngle();
+    this->currentPitchAngle = imu.getPitchAngle();
+
+    float requestedRollRate = requestedRollAngle * 6; //6 to make 300 dps
+    float requestedPitchRate = requestedPitchAngle * 6; //6 to make 300dps
 
     float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
     float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
