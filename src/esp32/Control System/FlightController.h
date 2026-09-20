@@ -13,68 +13,70 @@
 #include "../Peripherals/Barometer.h"
 #include "../Peripherals/LED.h"
 
-class FlightController{
-  public:
-    void begin();
+class FlightController
+{
+public:
+  void begin();
+  void calibrate();
+  void executeAngle();
+  void executeRate();
+  void executeHoldPosition();
+  void executeAutonomous();
+  void executeRTH();
 
-    void executeAngle();
-    void executeRate();
-    void executeHoldPosition();
-    void executeAutonomous();
-    void executeRTH();
+  bool isArmed();
 
-    bool isArmed();
-  private:
-    // Arm switch configuration (CRSF channel values are ~1000-2000us)
-    static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
-    static const int ARM_THROTTLE_MAX = 1050;     // throttle must be below this to arm
+private:
+  // Arm switch configuration (CRSF channel values are ~1000-2000us)
+  static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
+  static const int ARM_THROTTLE_MAX = 1050;  // throttle must be below this to arm
+  float timeCalibrated = -1;
+  void updateArmState();
+  void arm();
+  int disarm();
 
-    void updateArmState();
-    void arm();
-    int disarm();
+  void updateFaults();
 
-    void updateFaults();
+  int faultNumber = 0;
+  bool armed = false;
+  bool armSwitchWasOn = false; // previous switch position, used to detect OFF->ON edges
+  bool calibrated = false;
 
-    int faultNumber = 0;
-    bool armed = false;
-    bool armSwitchWasOn = false; // previous switch position, used to detect OFF->ON edges
+  Servo motors[4];
 
-    Servo motors[4];
+  IMU imu{0.98};
+  GPS gps;
+  Barometer baro;
+  Receiver receiver;
+  LED leds;
 
-    IMU imu{0.98};
-    GPS gps;
-    Barometer baro;
-    Receiver receiver;
-    LED leds;
+  MotorMixer motorMixer{39, 40, 41, 42};
+  PID rollAnglePID{1.1, 0, 0};
+  PID pitchAnglePID{1.1, 0, 0};
+  PID rollRatePID{0.45, 2, 0.02};
+  PID pitchRatePID{0.45, 2, 0.02};
+  PID yawRatePID{3.f, 12.f, 0};
 
+  double requestedRollAngle;
+  double requestedPitchAngle;
+  double requestedYaw;
+  double requestedThrottle;
 
-    MotorMixer motorMixer{39, 40, 41, 42};
-    PID rollAnglePID{1.1, 0, 0};
-    PID pitchAnglePID{1.1, 0, 0};
-    PID rollRatePID{0.45, 2, 0.02};
-    PID pitchRatePID{0.45, 2, 0.02};
-    PID yawRatePID{3.f, 12.f, 0};
+  double currentRollRate;
+  double currentPitchRate;
+  double currentYawRate;
 
-    double requestedRollAngle;
-    double requestedPitchAngle;
-    double requestedYaw;
-    double requestedThrottle;
+  double currentRollAngle;
+  double currentPitchAngle;
+  double currentYawAngle; // NOTE: Actually GPS heading but called "currentYawAngle" for consistency
 
-    double currentRollRate;
-    double currentPitchRate;
-    double currentYawRate;
-    
-    double currentRollAngle;
-    double currentPitchAngle;
-    double currentYawAngle; //NOTE: Actually GPS heading but called "currentYawAngle" for consistency
+  double currentX;
+  double currentY;
+  double currentZ;
 
-    double currentX;
-    double currentY;
-    double currentZ;
-
-    double currentVeloX;
-    double currentVeloY;
-    double currentVeloZ;
+  double currentVeloX;
+  double currentVeloY;
+  double currentVeloZ;
 };
 
 #endif

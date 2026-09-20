@@ -1,11 +1,12 @@
 #include "FlightController.h"
 
-void FlightController::begin(){
-    delay(3000); //to let user put the drone down
+void FlightController::begin()
+{
+    delay(3000); // to let user put the drone down
 
     leds.begin();
     leds.indicateStartup();
-    motorMixer.calibrateMotors();
+
     motorMixer.stopMotors();
 
     imu.setupIMU();
@@ -13,19 +14,40 @@ void FlightController::begin(){
     receiver.begin();
 }
 
-void FlightController::executeAngle(){
+void FlightController::calibrate()
+{
+    if (receiver.getThrottle() <= 0 && armed == false && receiver.rightBumperPressed() && calibrated == false)
+    {
+        if (timeCalibrated == -1)
+        {
+            timeCalibrated = 0;
+        }
+        else if (timeCalibrated == 0)
+        {
+            timeCalibrated = millis();
+        }
+        else if (millis() - timeCalibrated >= 3000)
+        {
+            motorMixer.calibrateMotors();
+            calibrated = true;
+        }
+    }
+}
+
+void FlightController::executeAngle()
+{
     leds.indicateBattery(11.9);
     leds.indicateFaults(2);
     leds.indicateGPS(0);
-    
 
     imu.update();
     receiver.update();
     baro.update();
 
     updateArmState();
-    //Serial.println(armed);
-    if (!armed) {
+    // Serial.println(armed);
+    if (!armed)
+    {
         motorMixer.stopMotors();
         return;
     }
@@ -52,19 +74,20 @@ void FlightController::executeAngle(){
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 }
 
-void FlightController::executeRate(){
+void FlightController::executeRate()
+{
     leds.indicateBattery(11.9);
     leds.indicateFaults(2);
     leds.indicateGPS(0);
-    
 
     imu.update();
     receiver.update();
     baro.update();
 
     updateArmState();
-    //Serial.println(armed);
-    if (!armed) {
+    // Serial.println(armed);
+    if (!armed)
+    {
         motorMixer.stopMotors();
         return;
     }
@@ -81,8 +104,8 @@ void FlightController::executeRate(){
     this->currentRollAngle = imu.getRollAngle();
     this->currentPitchAngle = imu.getPitchAngle();
 
-    float requestedRollRate = requestedRollAngle * 6; //6 to make 300 dps
-    float requestedPitchRate = requestedPitchAngle * 6; //6 to make 300dps
+    float requestedRollRate = requestedRollAngle * 6;   // 6 to make 300 dps
+    float requestedPitchRate = requestedPitchAngle * 6; // 6 to make 300dps
 
     float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
     float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
@@ -91,7 +114,8 @@ void FlightController::executeRate(){
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 }
 
-bool FlightController::isArmed(){
+bool FlightController::isArmed()
+{
     return armed;
 }
 
@@ -106,17 +130,23 @@ bool FlightController::isArmed(){
  * Disarming happens immediately when the switch goes OFF or the link is lost.
  */
 
-void FlightController::updateArmState(){
+void FlightController::updateArmState()
+{
     bool armSwitchOn = receiver.isLinkUp() && receiver.getSA() < ARM_SWITCH_THRESHOLD;
 
-    if (armed) {
-        if (!armSwitchOn) {
+    if (armed)
+    {
+        if (!armSwitchOn)
+        {
             disarm();
         }
-    } else {
+    }
+    else
+    {
         bool switchJustTurnedOn = armSwitchOn && !armSwitchWasOn;
         bool throttleLow = receiver.getThrottle() < ARM_THROTTLE_MAX;
-        if (switchJustTurnedOn && throttleLow) {
+        if (switchJustTurnedOn && throttleLow)
+        {
             arm();
         }
     }
@@ -124,7 +154,8 @@ void FlightController::updateArmState(){
     armSwitchWasOn = armSwitchOn;
 }
 
-void FlightController::arm(){
+void FlightController::arm()
+{
     // Clear any accumulated integral / derivative history so the first
     // control outputs after arming start from a clean state.
     rollAnglePID.resetPID();
@@ -135,23 +166,20 @@ void FlightController::arm(){
     armed = true;
 }
 
-int FlightController::disarm(){
+int FlightController::disarm()
+{
     armed = false;
     motorMixer.stopMotors();
     return 0;
 }
 
-void FlightController::updateFaults(){}
-void FlightController::executeAutonomous(){
-
+void FlightController::updateFaults() {}
+void FlightController::executeAutonomous()
+{
 }
-void FlightController::executeHoldPosition(){
-
+void FlightController::executeHoldPosition()
+{
 }
-void FlightController::executeRTH(){
-
+void FlightController::executeRTH()
+{
 }
-
-
-
-

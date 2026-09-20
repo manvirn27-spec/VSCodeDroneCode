@@ -83,7 +83,7 @@ float Receiver::getSA()
     }
 }
 
-bool Receiver::getSF()
+bool Receiver::rightBumperPressed()
 {
     float SF = crsf.getChannel(SF_CHANNEL);
     if (SF <= 1100)
@@ -146,18 +146,17 @@ float Receiver::getSD()
     }
 }
 
-bool Receiver::isLinkUp() {
+bool Receiver::isLinkUp()
+{
     return crsf.isLinkUp();
 }
 
-void Receiver::printAll() {
+void Receiver::printAll()
+{
     // Calling the getter methods ensures internal variables update and returns scaled values:
-    printf("[STICKS SCALED] Roll: %6.2f | Pitch: %6.2f | Yaw: %6.2f | Thr: %6.2f | SA: %f\n", 
-        getRoll(), getPitch(), getYaw(), getThrottle(), getSA());
+    printf("[STICKS SCALED] Roll: %6.2f | Pitch: %6.2f | Yaw: %6.2f | Thr: %6.2f | SA: %f\n",
+           getRoll(), getPitch(), getYaw(), getThrottle(), getSA());
 }
-
-
-
 
 /*
 

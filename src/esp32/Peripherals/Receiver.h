@@ -9,7 +9,7 @@ public:
   float getPitch();
   float getYaw();
 
-  bool getSF();
+  bool rightBumperPressed();
   float getSA();
   float getSC();
   float getSD();
@@ -25,32 +25,31 @@ public:
   void printAll();
 
 private:
+  int ROLL_CHANNEL = 1;
+  int PITCH_CHANNEL = 2;
+  int THROTTLE_CHANNEL = 3;
+  int YAW_CHANNEL = 4;
 
- int ROLL_CHANNEL = 1;
- int PITCH_CHANNEL = 2;
- int THROTTLE_CHANNEL = 3;
- int YAW_CHANNEL = 4;
+  int SC_CHANNEL = 8;
+  int SF_CHANNEL = 6;
+  int SA_CHANNEL = 7;
+  // const int S1_CHANNEL = 5;
 
- int SC_CHANNEL = 8;
- int SF_CHANNEL = 6;
- int SA_CHANNEL = 7;
-// const int S1_CHANNEL = 5;
+  int SD_CHANNEL = 9;
+  int SB_CHANNEL = 10;
+  int S1_CHANNEL = 11;
+  int S2_CHANNEL = 12;
 
- int SD_CHANNEL = 9;
- int SB_CHANNEL = 10;
- int S1_CHANNEL = 11;
- int S2_CHANNEL = 12;
-
- float PITCH_ANGLE_LIMIT = 50.0f;
- float ROLL_ANGLE_LIMIT = 50.0f;
-// TODO: change
- float YAW_ROTATION_MAX_SPEED_DEG_PER_SEC = 360.0f;
+  float PITCH_ANGLE_LIMIT = 50.0f;
+  float ROLL_ANGLE_LIMIT = 50.0f;
+  // TODO: change
+  float YAW_ROTATION_MAX_SPEED_DEG_PER_SEC = 360.0f;
 
   float throttle;
   float roll;
   float pitch;
   float yaw;
-  bool SF;
+  bool isRightBumperPressed;
   float SA;
   float SC;
   float SD;
