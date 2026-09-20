@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <ESP32Servo.h>
+#include <cstdint>
 
 #include "MotorMixer.h"
 #include "PID.h"
@@ -34,6 +35,15 @@ private:
   void updateArmState();
   void arm();
   int disarm();
+  void logData(float dt, float errorRoll, float errorPitch, float errorYaw,
+               float rollRate, float pitchRate, float yawRate);
+
+  bool isArmed();
+
+private:
+  // Arm switch configuration (CRSF channel values are ~1000-2000us)
+  static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
+  static const int ARM_THROTTLE_MAX = 1050;  // throttle must be below this to arm
 
   void updateFaults();
 
@@ -74,9 +84,23 @@ private:
   double currentY;
   double currentZ;
 
+  double currentX;
+  double currentY;
+  double currentZ;
+
   double currentVeloX;
   double currentVeloY;
   double currentVeloZ;
+
+  float dtTelemetry[1000];
+  float errorTelemetry[1000][3];
+  float rateTelemetry[1000][3];
+  float angleTelmetry[1000][3];
+
+  bool alreadyLogged = false;
+  uint32_t lastTimeLog = 0;
+  uint32_t thresholdLog = 100; // 100 ms delay between logs. Gives 10 seconds of logging
+  uint32_t numberOfLogs = 0;
 };
 
 #endif

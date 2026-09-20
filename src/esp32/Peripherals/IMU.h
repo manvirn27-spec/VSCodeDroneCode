@@ -26,17 +26,17 @@ class IMU{
 
   private:
     Adafruit_LSM6DSOX imu;
-    double alphaGyro;
+    float alphaGyro;
     
-    double rollRate;
-    double pitchRate;
-    double yawRate;
-    double rollAngle;
-    double pitchAngle;
+    float rollRate;
+    float pitchRate;
+    float yawRate;
+    float rollAngle;
+    float pitchAngle;
 
-    double rateCalibrationRoll;
-    double rateCalibrationPitch;
-    double rateCalibrationYaw;
+    float rateCalibrationRoll;
+    float rateCalibrationPitch;
+    float rateCalibrationYaw;
 
     float temperature;
 };

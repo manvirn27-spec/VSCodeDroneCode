@@ -84,6 +84,9 @@ double PID::exePID(double error)
   double iResult = totalError * I;
   result = pResult + dResult + iResult;
 
+  //Debug print
+    Serial.printf("dt: %.6f \n", dt);
+
   lastError = error;
   return result;
 }
