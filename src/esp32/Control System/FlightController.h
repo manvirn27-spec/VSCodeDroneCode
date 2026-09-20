@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <ESP32Servo.h>
+#include <cstdint>
 
 #include "MotorMixer.h"
 #include "PID.h"
@@ -22,6 +23,8 @@ class FlightController{
     void executeHoldPosition();
     void executeAutonomous();
     void executeRTH();
+
+    void logData();
 
     bool isArmed();
   private:
@@ -75,6 +78,16 @@ class FlightController{
     double currentVeloX;
     double currentVeloY;
     double currentVeloZ;
+
+    float dtTelemetry[1000];
+    float errorTelemetry[1000][3];
+    float rateTelemetry[1000][3];
+    float angleTelmetry[1000][3];
+
+    bool alreadyLogged = false;
+    uint32_t lastTimeLog = 0;
+    uint32_t thresholdLog = 100; //100 ms delay between logs. Gives 10 seconds of logging
+    uint32_t numberOfLogs = 0;
 };
 
 #endif

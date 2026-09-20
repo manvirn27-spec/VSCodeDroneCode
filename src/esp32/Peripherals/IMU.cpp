@@ -1,4 +1,5 @@
 #include "IMU.h"
+#include <cmath>
 
 IMU::IMU(double alphaGyro){
   this->alphaGyro = alphaGyro;
@@ -24,9 +25,16 @@ void IMU::update(){
   imu.getEvent(&accel, &gyro, &temp);
   temperature = temp.temperature;
 
-  rollRate = gyro.gyro.y * alphaGyro + (1 - alphaGyro) * rollRate;
-  pitchRate = -(gyro.gyro.x * alphaGyro + (1 - alphaGyro) * pitchRate);
-  yawRate = -(gyro.gyro.z * alphaGyro + (1 - alphaGyro) * yawRate);
+  // 1. Get raw rates in degrees per second
+  float rawRollRate  =  gyro.gyro.y * 180.f/M_PI;
+  float rawPitchRate = -gyro.gyro.x * 180.f/M_PI;
+  float rawYawRate   = -gyro.gyro.z * 180.f/M_PI;
+
+  rollRate = rawRollRate * alphaGyro + (1 - alphaGyro) * rollRate;
+  pitchRate = rawPitchRate * alphaGyro + (1 - alphaGyro) * pitchRate;
+  yawRate = rawYawRate * alphaGyro + (1 - alphaGyro) * yawRate;
+  //Debug print
+  //Serial.println(yawRate);
 
   pitchAngle = -atan(accel.acceleration.y/sqrt(accel.acceleration.x*accel.acceleration.x+accel.acceleration.z*accel.acceleration.z))/(3.142/180);
   rollAngle = -atan(accel.acceleration.x/sqrt(accel.acceleration.y*accel.acceleration.y+accel.acceleration.z*accel.acceleration.z))/(3.142/180);

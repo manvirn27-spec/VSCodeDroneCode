@@ -88,6 +88,8 @@ void FlightController::executeRate(){
     float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
     float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
 
+    //Serial.printf("Pitch error: %f, Roll error: %f, Yaw Error: %f \n", 
+    //    requestedPitchRate - currentPitchRate, requestedRollRate - currentRollRate, requestedYaw, currentYawRate);
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 }
 
@@ -142,6 +144,41 @@ int FlightController::disarm(){
 }
 
 void FlightController::updateFaults(){}
+
+void FlightController::logData(){
+    if(receiver.getSB()){
+        if(!alreadyLogged){
+            if(millis() - lastTimeLog > thresholdLog){
+                if (numberOfLogs >= 1000){
+                    alreadyLogged = true;
+                    return;
+                }
+                numberOfLogs++;
+
+            }
+        } else{
+            switch(static_cast<int>(receiver.getSD())){
+                case 1:
+                    Serial.println("DT:");
+                    for(int i = 0; i < 1000; i++){
+                        Serial.printf("%.6f \n", dtTelemetry[i]);
+                    }
+                case 0:
+                    Serial.println("Error:");
+                    for(int i = 0; i < 1000; i++){
+                        Serial.printf("%.6f, %.6f, %.6f \n",
+                             errorTelemetry[i][0], errorTelemetry[i][1], errorTelemetry[i][2]);
+                    }
+                case -1:
+                    Serial.println("Rates:");
+                    for(int i = 0; i < 1000; i++){
+                        Serial.printf("%.6f, %.6f, %.6f \n",
+                             rateTelemetry[i][0], rateTelemetry[i][1], rateTelemetry[i][2]);
+                    }
+            }
+        }   
+    }
+}
 void FlightController::executeAutonomous(){
 
 }
@@ -151,6 +188,7 @@ void FlightController::executeHoldPosition(){
 void FlightController::executeRTH(){
 
 }
+
 
 
 
