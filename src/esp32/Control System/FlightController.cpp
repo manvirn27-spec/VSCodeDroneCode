@@ -145,7 +145,8 @@ int FlightController::disarm(){
 
 void FlightController::updateFaults(){}
 
-void FlightController::logData(){
+void FlightController::logData(float dt, float errorRoll, float errorPitch, float errorYaw, 
+                                    float rollRate, float pitchRate, float yawRate){
     if(receiver.getSB()){
         if(!alreadyLogged){
             if(millis() - lastTimeLog > thresholdLog){
@@ -153,6 +154,14 @@ void FlightController::logData(){
                     alreadyLogged = true;
                     return;
                 }
+                dtTelemetry[numberOfLogs] = dt;
+                errorTelemetry[numberOfLogs][0] = errorRoll;
+                errorTelemetry[numberOfLogs][1] = errorPitch;
+                errorTelemetry[numberOfLogs][2] = errorYaw;
+                rateTelemetry[numberOfLogs][0] = rollRate;
+                rateTelemetry[numberOfLogs][1] = pitchRate;
+                rateTelemetry[numberOfLogs][2] = yawRate;
+                
                 numberOfLogs++;
 
             }
@@ -163,18 +172,21 @@ void FlightController::logData(){
                     for(int i = 0; i < 1000; i++){
                         Serial.printf("%.6f \n", dtTelemetry[i]);
                     }
+                    break;
                 case 0:
                     Serial.println("Error:");
                     for(int i = 0; i < 1000; i++){
                         Serial.printf("%.6f, %.6f, %.6f \n",
                              errorTelemetry[i][0], errorTelemetry[i][1], errorTelemetry[i][2]);
                     }
+                    break;
                 case -1:
                     Serial.println("Rates:");
                     for(int i = 0; i < 1000; i++){
                         Serial.printf("%.6f, %.6f, %.6f \n",
                              rateTelemetry[i][0], rateTelemetry[i][1], rateTelemetry[i][2]);
                     }
+                    break;
             }
         }   
     }

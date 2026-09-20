@@ -24,7 +24,8 @@ class FlightController{
     void executeAutonomous();
     void executeRTH();
 
-    void logData();
+    void logData(float dt, float errorRoll, float errorPitch, float errorYaw, 
+                                    float rollRate, float pitchRate, float yawRate);
 
     bool isArmed();
   private:
