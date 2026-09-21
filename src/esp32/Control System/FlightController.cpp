@@ -1,12 +1,11 @@
 #include "FlightController.h"
 
-void FlightController::begin()
-{
-    delay(3000); // to let user put the drone down
+void FlightController::begin(){
+    delay(3000); //to let user put the drone down
 
     leds.begin();
     leds.indicateStartup();
-
+    motorMixer.calibrateMotors();
     motorMixer.stopMotors();
 
     imu.setupIMU();
@@ -14,40 +13,19 @@ void FlightController::begin()
     receiver.begin();
 }
 
-void FlightController::calibrate()
-{
-    if (receiver.getThrottle() <= 0 && armed == false && receiver.rightBumperPressed() && calibrated == false)
-    {
-        if (timeCalibrated == -1)
-        {
-            timeCalibrated = 0;
-        }
-        else if (timeCalibrated == 0)
-        {
-            timeCalibrated = millis();
-        }
-        else if (millis() - timeCalibrated >= 3000)
-        {
-            motorMixer.calibrateMotors();
-            calibrated = true;
-        }
-    }
-}
-
-void FlightController::executeAngle()
-{
+void FlightController::executeAngle(){
     leds.indicateBattery(11.9);
     leds.indicateFaults(2);
     leds.indicateGPS(0);
+    
 
     imu.update();
     receiver.update();
     baro.update();
 
     updateArmState();
-    // Serial.println(armed);
-    if (!armed)
-    {
+    //Serial.println(armed);
+    if (!armed) {
         motorMixer.stopMotors();
         return;
     }
@@ -74,20 +52,20 @@ void FlightController::executeAngle()
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 }
 
-void FlightController::executeRate()
-{
+void FlightController::executeRate(){
+    dt = 0;
     leds.indicateBattery(11.9);
     leds.indicateFaults(2);
     leds.indicateGPS(0);
+    
 
     imu.update();
     receiver.update();
     baro.update();
 
     updateArmState();
-    // Serial.println(armed);
-    if (!armed)
-    {
+    //Serial.println(armed);
+    if (!armed) {
         motorMixer.stopMotors();
         return;
     }
@@ -104,20 +82,22 @@ void FlightController::executeRate()
     this->currentRollAngle = imu.getRollAngle();
     this->currentPitchAngle = imu.getPitchAngle();
 
-    float requestedRollRate = requestedRollAngle * 6;   // 6 to make 300 dps
-    float requestedPitchRate = requestedPitchAngle * 6; // 6 to make 300dps
+    float requestedRollRate = requestedRollAngle * 6; //6 to make 300 dps
+    float requestedPitchRate = requestedPitchAngle * 6; //6 to make 300dps
 
     float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
     float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
     float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
 
-    // Serial.printf("Pitch error: %f, Roll error: %f, Yaw Error: %f \n",
-    //     requestedPitchRate - currentPitchRate, requestedRollRate - currentRollRate, requestedYaw, currentYawRate);
+    //Serial.printf("Pitch error: %f, Roll error: %f, Yaw Error: %f \n", 
+    //    requestedPitchRate - currentPitchRate, requestedRollRate - currentRollRate, requestedYaw, currentYawRate);
+    logData(dt, requestedRollRate - currentRollAngle, requestedPitchRate - currentPitchRate,
+                requestedYaw - currentYawRate, currentRollRate, currentPitchRate, currentYawRate);
+                
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 }
 
-bool FlightController::isArmed()
-{
+bool FlightController::isArmed(){
     return armed;
 }
 
@@ -132,23 +112,17 @@ bool FlightController::isArmed()
  * Disarming happens immediately when the switch goes OFF or the link is lost.
  */
 
-void FlightController::updateArmState()
-{
+void FlightController::updateArmState(){
     bool armSwitchOn = receiver.isLinkUp() && receiver.getSA() < ARM_SWITCH_THRESHOLD;
 
-    if (armed)
-    {
-        if (!armSwitchOn)
-        {
+    if (armed) {
+        if (!armSwitchOn) {
             disarm();
         }
-    }
-    else
-    {
+    } else {
         bool switchJustTurnedOn = armSwitchOn && !armSwitchWasOn;
         bool throttleLow = receiver.getThrottle() < ARM_THROTTLE_MAX;
-        if (switchJustTurnedOn && throttleLow)
-        {
+        if (switchJustTurnedOn && throttleLow) {
             arm();
         }
     }
@@ -156,8 +130,7 @@ void FlightController::updateArmState()
     armSwitchWasOn = armSwitchOn;
 }
 
-void FlightController::arm()
-{
+void FlightController::arm(){
     // Clear any accumulated integral / derivative history so the first
     // control outputs after arming start from a clean state.
     rollAnglePID.resetPID();
@@ -168,26 +141,21 @@ void FlightController::arm()
     armed = true;
 }
 
-int FlightController::disarm()
-{
+int FlightController::disarm(){
     armed = false;
     motorMixer.stopMotors();
     return 0;
 }
 
-void FlightController::updateFaults() {}
+void FlightController::updateFaults(){}
 
-void FlightController::logData(float dt, float errorRoll, float errorPitch, float errorYaw,
-                               float rollRate, float pitchRate, float yawRate)
-{
-    if (receiver.getSB())
-    {
-        if (!alreadyLogged)
-        {
-            if (millis() - lastTimeLog > thresholdLog)
-            {
-                if (numberOfLogs >= 1000)
-                {
+void FlightController::logData(float dt, float errorRoll, float errorPitch, float errorYaw, 
+                                    float rollRate, float pitchRate, float yawRate){
+    if(receiver.getSB()){
+        if(!alreadyLogged){
+            if(millis() - lastTimeLog > thresholdLog){
+                lastTimeLog = millis();
+                if (numberOfLogs >= 1000){
                     alreadyLogged = true;
                     return;
                 }
@@ -200,45 +168,47 @@ void FlightController::logData(float dt, float errorRoll, float errorPitch, floa
                 rateTelemetry[numberOfLogs][2] = yawRate;
 
                 numberOfLogs++;
+
             }
-        }
-        else
-        {
-            switch (static_cast<int>(receiver.getSD()))
-            {
-            case 1:
-                Serial.println("DT:");
-                for (int i = 0; i < 1000; i++)
-                {
-                    Serial.printf("%.6f \n", dtTelemetry[i]);
-                }
-                break;
-            case 0:
-                Serial.println("Error:");
-                for (int i = 0; i < 1000; i++)
-                {
-                    Serial.printf("%.6f, %.6f, %.6f \n",
-                                  errorTelemetry[i][0], errorTelemetry[i][1], errorTelemetry[i][2]);
-                }
-                break;
-            case -1:
-                Serial.println("Rates:");
-                for (int i = 0; i < 1000; i++)
-                {
-                    Serial.printf("%.6f, %.6f, %.6f \n",
-                                  rateTelemetry[i][0], rateTelemetry[i][1], rateTelemetry[i][2]);
-                }
-                break;
+        } 
+        if(!alreadyPrinted && receiver.getSF()){
+            alreadyPrinted = true;
+            switch(static_cast<int>(receiver.getSD())){
+                case 1:
+                    Serial.println("DT:");
+                    for(int i = 0; i < 1000; i++){
+                        Serial.printf("%.6f \n", dtTelemetry[i]);
+                    }
+                    break;
+                case 0:
+                    Serial.println("Error:");
+                    for(int i = 0; i < 1000; i++){
+                        Serial.printf("%.6f, %.6f, %.6f \n",
+                             errorTelemetry[i][0], errorTelemetry[i][1], errorTelemetry[i][2]);
+                    }
+                    break;
+                case -1:
+                    Serial.println("Rates:");
+                    for(int i = 0; i < 1000; i++){
+                        Serial.printf("%.6f, %.6f, %.6f \n",
+                             rateTelemetry[i][0], rateTelemetry[i][1], rateTelemetry[i][2]);
+                    }
+                    break;
             }
-        }
+        }   
     }
 }
-void FlightController::executeAutonomous()
-{
+void FlightController::executeAutonomous(){
+
 }
-void FlightController::executeHoldPosition()
-{
+void FlightController::executeHoldPosition(){
+
 }
-void FlightController::executeRTH()
-{
+void FlightController::executeRTH(){
+
 }
+
+
+
+
+
