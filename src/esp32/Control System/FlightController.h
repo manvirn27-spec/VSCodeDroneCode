@@ -38,8 +38,6 @@ private:
   void logData(float dt, float errorRoll, float errorPitch, float errorYaw,
                float rollRate, float pitchRate, float yawRate);
 
-  bool isArmed();
-
 private:
   // Arm switch configuration (CRSF channel values are ~1000-2000us)
   static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
@@ -98,12 +96,12 @@ private:
   float angleTelmetry[1000][3];
 
   bool alreadyLogged = false;
-    bool alreadyPrinted = false;
+  bool alreadyPrinted = false;
   uint32_t lastTimeLog = 0;
   uint32_t thresholdLog = 100; // 100 ms delay between logs. Gives 10 seconds of logging
   uint32_t numberOfLogs = 0;
 
-    float dt;
+  float dt;
 };
 
 #endif
