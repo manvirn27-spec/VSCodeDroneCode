@@ -16,7 +16,7 @@ void FlightController::begin()
 
 void FlightController::calibrate()
 {
-    if (receiver.getThrottle() <= 0 && isArmed() == false && receiver.rightBumperPressed() && calibrated == false)
+    if (receiver.getThrottle() <= 1050 && isArmed() == false && receiver.rightBumperPressed() && calibrated == false)
     {
         if (timeCalibrated == -1)
         {
