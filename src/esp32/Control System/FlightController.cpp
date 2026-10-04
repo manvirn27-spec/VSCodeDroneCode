@@ -116,6 +116,7 @@ void FlightController::executeRate()
     //     requestedPitchRate - currentPitchRate, requestedRollRate - currentRollRate, requestedYaw, currentYawRate);
     logData(dt, requestedRollRate - currentRollAngle, requestedPitchRate - currentPitchRate,
             requestedYaw - currentYawRate, currentRollRate, currentPitchRate, currentYawRate);
+    Serial.println("Attempted print");
 
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 }
@@ -184,7 +185,7 @@ void FlightController::updateFaults() {}
 void FlightController::logData(float dt, float errorRoll, float errorPitch, float errorYaw,
                                float rollRate, float pitchRate, float yawRate)
 {
-    if (receiver.getSB())
+    if (1)
     {
         if (!alreadyLogged)
         {
@@ -207,9 +208,8 @@ void FlightController::logData(float dt, float errorRoll, float errorPitch, floa
                 numberOfLogs++;
             }
         }
-        if (!alreadyPrinted && receiver.rightBumperPressed())
+        if (receiver.rightBumperPressed())
         {
-            alreadyPrinted = true;
             switch (static_cast<int>(receiver.getSD()))
             {
             case 1:

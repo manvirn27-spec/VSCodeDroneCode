@@ -87,7 +87,6 @@ private:
   float angleTelmetry[1000][3];
 
   bool alreadyLogged = false;
-  bool alreadyPrinted = false;
   uint32_t lastTimeLog = 0;
   uint32_t thresholdLog = 100; // 100 ms delay between logs. Gives 10 seconds of logging
   uint32_t numberOfLogs = 0;
