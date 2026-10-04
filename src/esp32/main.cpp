@@ -42,7 +42,7 @@ void loop()
   // baro.update();
   // baro.printAll();
   fc.executeRate();
-  fc.calibrate(); //this should only run once once and then will not do anything once calibrated
+  fc.calibrate(); // this should only run once once and then will not do anything once calibrated
   // elrs.update();
   // elrs.printAll();
 }

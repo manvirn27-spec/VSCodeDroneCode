@@ -74,7 +74,8 @@ double PID::exePID(double error)
   unsigned long now = millis();
   double dt = (now - lastTime) / 1000.0; // seconds since last call
   lastTime = now;
-  if (dt <= 0) dt = 0.004; // avoid divide-by-zero on the first / back-to-back calls
+  if (dt <= 0)
+    dt = 0.004; // avoid divide-by-zero on the first / back-to-back calls
 
   double result = 0;
   double pResult = error * P;
@@ -84,8 +85,8 @@ double PID::exePID(double error)
   double iResult = totalError * I;
   result = pResult + dResult + iResult;
 
-  //Debug print
-    Serial.printf("dt: %.6f \n", dt);
+  // Debug print
+  //  Serial.printf("dt: %.6f \n", dt);
 
   lastError = error;
   return result;

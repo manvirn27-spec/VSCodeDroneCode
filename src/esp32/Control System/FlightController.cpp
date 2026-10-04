@@ -16,19 +16,23 @@ void FlightController::begin()
 
 void FlightController::calibrate()
 {
-    if (receiver.getThrottle() <= 1050 && isArmed() == false && receiver.rightBumperPressed() && calibrated == false)
+    Serial.printf("armed:  %i \n", isArmed());
+    Serial.printf("Throttle down: %i \n", receiver.getThrottle() <= 1050);
+    if (receiver.getThrottle() <= 1050 && isArmed() == false && receiver.rightBumperPressed() && calibrated == false || 1)
     {
         if (timeCalibrated == -1)
         {
             timeCalibrated = 0;
+            Serial.print("beginning calibration");
+            motorMixer.calibrateMotors();
         }
         else if (timeCalibrated == 0)
         {
             timeCalibrated = millis();
         }
-        else if (millis() - timeCalibrated >= 3000)
+        else if (millis() - timeCalibrated >= 3000 && calibrated == false)
         {
-            motorMixer.calibrateMotors();
+
             calibrated = true;
         }
     }
@@ -206,7 +210,7 @@ void FlightController::logData(float dt, float errorRoll, float errorPitch, floa
                 numberOfLogs++;
             }
         }
-        if (!alreadyPrinted && receiver.getSF())
+        if (!alreadyPrinted && receiver.rightBumperPressed())
         {
             alreadyPrinted = true;
             switch (static_cast<int>(receiver.getSD()))
