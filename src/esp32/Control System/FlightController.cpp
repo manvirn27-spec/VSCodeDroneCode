@@ -4,6 +4,7 @@ void FlightController::begin()
 {
     delay(3000); // to let user put the drone down
 
+    Serial.begin(115200);
     leds.begin();
     leds.indicateStartup();
     motorMixer.calibrateMotors();
@@ -206,7 +207,7 @@ void FlightController::logData(float dt, float errorRoll, float errorPitch, floa
                 numberOfLogs++;
             }
         }
-        if (!alreadyPrinted && receiver.getSF())
+        if (!alreadyPrinted && receiver.rightBumperPressed())
         {
             alreadyPrinted = true;
             switch (static_cast<int>(receiver.getSD()))

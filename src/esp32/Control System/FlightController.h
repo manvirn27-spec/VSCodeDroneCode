@@ -38,11 +38,6 @@ private:
   void logData(float dt, float errorRoll, float errorPitch, float errorYaw,
                float rollRate, float pitchRate, float yawRate);
 
-private:
-  // Arm switch configuration (CRSF channel values are ~1000-2000us)
-  static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
-  static const int ARM_THROTTLE_MAX = 1050;  // throttle must be below this to arm
-
   void updateFaults();
 
   int faultNumber = 0;
@@ -77,10 +72,6 @@ private:
   double currentRollAngle;
   double currentPitchAngle;
   double currentYawAngle; // NOTE: Actually GPS heading but called "currentYawAngle" for consistency
-
-  double currentX;
-  double currentY;
-  double currentZ;
 
   double currentX;
   double currentY;
