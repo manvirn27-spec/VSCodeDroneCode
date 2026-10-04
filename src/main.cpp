@@ -7,15 +7,10 @@ Barometer baro;
 
 void setup() {
   Serial.begin(115200);
-  //imu.setupIMU(); SUCCESS
-  baro.begin();
+  imu.setupIMU(); 
 }
 
 void loop() {
-  //imu.update(); SUCCESS
-  //imu.printValues(); SUCCESS
-  baro.update();
-  baro.printAll();
-  delay(1000);
-
+  imu.update(); 
+  imu.printValues();
 }
