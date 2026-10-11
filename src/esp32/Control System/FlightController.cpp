@@ -16,24 +16,26 @@ void FlightController::begin()
 
 void FlightController::calibrate()
 {
-    Serial.printf("armed:  %i \n", isArmed());
-    Serial.printf("Throttle down: %i \n", receiver.getThrottle() <= 1050);
-    if (receiver.getThrottle() <= 1050 && isArmed() == false && receiver.rightBumperPressed() && calibrated == false || 1)
+    // Serial.printf("armed:  %i \n", isArmed());
+    // Serial.printf("Throttle down: %i \n", receiver.getThrottle() <= 1050);
+    if ((receiver.getThrottle() <= 1050 && isArmed() == false && receiver.rightBumperPressed() && calibrated == false) || 1)
     {
         if (timeCalibrated == -1)
         {
             timeCalibrated = 0;
-            Serial.print("beginning calibration");
+            // Serial.print("beginning calibration");
             motorMixer.calibrateMotors();
         }
         else if (timeCalibrated == 0)
         {
             timeCalibrated = millis();
+            // Serial.print(timeCalibrated);
         }
         else if (millis() - timeCalibrated >= 3000 && calibrated == false)
         {
 
             calibrated = true;
+            // Serial.print("calibrated");
         }
     }
 }

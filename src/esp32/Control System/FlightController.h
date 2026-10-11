@@ -31,7 +31,7 @@ private:
   // Arm switch configuration (CRSF channel values are ~1000-2000us)
   static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
   static const int ARM_THROTTLE_MAX = 1050;  // throttle must be below this to arm
-  uint16_t timeCalibrated = -1;
+  long timeCalibrated = -1;
   void updateArmState();
   void arm();
   int disarm();
