@@ -5,8 +5,10 @@ IMU::IMU(double alphaGyro){
   this->alphaGyro = alphaGyro;
 }
 
-void IMU::setupIMU(){
+void IMU::begin(){
   Wire.begin(8, 9);
+  Wire.setClock(400000);
+
   if (!imu.begin_I2C(0x6B, &Wire)) {
      Serial.println("Failed to find LSM6DSOX chip");
   }

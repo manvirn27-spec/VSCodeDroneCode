@@ -6,30 +6,21 @@
 #include "Peripherals/Receiver.h"
 #include "Control System/FlightController.h" //Ultimately only include file
 
-/*TODO
-TIM(make new class):
-  Telemetry integration
-  (Battery Voltage, requested roll rate, requested pitch rate, roll rate error, pitch rate error)
-
-Aiken(Flight controller execute() method and LED class):
-  Calibrate motors at press of controller button. Finish LED class
-
-Manvir:
-  Integrate GPS. Setup interrupts for barometer. Work on attitude and altitude estimation
-
-Arjun:
-  GPS print all method.
-*/
-
 FlightController fc;
 // Receiver elrs;
+//IMU imu{0.98};
 
 void setup()
 {
+  Serial.begin(115200);
+  //imu.begin();
   fc.begin();
+  pinMode(16, OUTPUT);
 }
 
 void loop()
 {
   fc.executeRate();
+  //imu.update();
+  //Serial.println(imu.getRollRate());
 }
