@@ -118,6 +118,9 @@ void FlightController::executeRate()
         return;             //----------------NOTE: EVERYTHING UNDER DOESN'T RUN IF NOT ARMED
     }
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
+
+    while(micros() - lastTime < 4000){}
+
     dt_us = (micros() - lastTime);
     lastTime = micros();
     this->dt = dt_us/1000000.f;
