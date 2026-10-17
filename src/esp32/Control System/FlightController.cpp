@@ -6,7 +6,6 @@ void FlightController::begin()
 
     leds.begin();
     leds.indicateStartup();
-    motorMixer.calibrateMotors();
     motorMixer.stopMotors();
 
     imu.setupIMU();
@@ -16,9 +15,14 @@ void FlightController::begin()
 
 void FlightController::calibrate()
 {
+    // receiver.printChannel(5);
+    // receiver.printChannel(13);
+    // receiver.printChannel(14);
+    // receiver.printChannel(15);
+    // receiver.printChannel(16);
     // Serial.printf("armed:  %i \n", isArmed());
     // Serial.printf("Throttle down: %i \n", receiver.getThrottle() <= 1050);
-    if ((receiver.getThrottle() <= 1050 && isArmed() == false && receiver.rightBumperPressed() && calibrated == false) || 1)
+    if ((receiver.getThrottle() <= 1050 && isArmed() == false && armedOnce == false && receiver.rightBumperPressed() && calibrated == false))
     {
         if (timeCalibrated == -1)
         {
@@ -29,7 +33,7 @@ void FlightController::calibrate()
         else if (timeCalibrated == 0)
         {
             timeCalibrated = millis();
-            // Serial.print(timeCalibrated);
+            Serial.print(timeCalibrated);
         }
         else if (millis() - timeCalibrated >= 3000 && calibrated == false)
         {
@@ -175,6 +179,7 @@ void FlightController::arm()
     pitchRatePID.resetPID();
     yawRatePID.resetPID();
     armed = true;
+    armedOnce = true;
 }
 
 int FlightController::disarm()

@@ -49,6 +49,7 @@ private:
   bool armed = false;
   bool armSwitchWasOn = false; // previous switch position, used to detect OFF->ON edges
   bool calibrated = false;
+  bool armedOnce = false;
 
   Servo motors[4];
 
