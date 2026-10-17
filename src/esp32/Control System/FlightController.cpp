@@ -4,6 +4,7 @@ void FlightController::begin()
 {
     delay(3000); // to let user put the drone down
 
+    Serial.begin(115200);
     leds.begin();
     leds.indicateStartup();
     motorMixer.stopMotors();
