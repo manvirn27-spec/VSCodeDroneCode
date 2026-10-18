@@ -12,7 +12,7 @@ void FlightController::begin()
     baro.begin();
     receiver.begin();
 }
-/*
+
 void FlightController::calibrate()
 {
     // receiver.printChannel(5);
@@ -43,7 +43,7 @@ void FlightController::calibrate()
         }
     }
 }
-    
+
 void FlightController::executeAngle()
 {
     leds.indicateBattery(11.9);
@@ -83,7 +83,7 @@ void FlightController::executeAngle()
 
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 }
-*/
+
 void FlightController::executeRate()
 {
     leds.indicateBattery(11.9);
@@ -95,7 +95,7 @@ void FlightController::executeRate()
     baro.update();
 
     updateArmState();
-    //Serial.println(armed);
+    // Serial.println(armed);
     this->requestedRollAngle = receiver.getRoll();
     this->requestedPitchAngle = receiver.getPitch();
     this->requestedYaw = receiver.getYaw();
@@ -111,29 +111,31 @@ void FlightController::executeRate()
     this->currentPitchAngle = imu.getPitchAngle();
 
     logData(this->dt, requestedRollRate - currentRollRate, requestedPitchRate - currentPitchRate,
-        requestedYaw - currentYawRate, currentRollRate, currentPitchRate, currentYawRate);
-  
+            requestedYaw - currentYawRate, currentRollRate, currentPitchRate, currentYawRate);
+
     updateFaults();
 
     float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
     float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
     float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
 
-     //Serial.printf("Pitch error: %f, Roll error: %f, Yaw Error: %f \n",
-       //  requestedPitchRate - currentPitchRate, requestedRollRate - currentRollRate, requestedYaw, currentYawRate);
+    // Serial.printf("Pitch error: %f, Roll error: %f, Yaw Error: %f \n",
+    //   requestedPitchRate - currentPitchRate, requestedRollRate - currentRollRate, requestedYaw, currentYawRate);
 
     if (!armed)
     {
         motorMixer.stopMotors();
-        return;             //----------------NOTE: EVERYTHING UNDER DOESN'T RUN IF NOT ARMED
+        return; //----------------NOTE: EVERYTHING UNDER DOESN'T RUN IF NOT ARMED
     }
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 
-    while(micros() - lastTime < 4000){}
+    while (micros() - lastTime < 4000)
+    {
+    }
 
     dt_us = (micros() - lastTime);
     lastTime = micros();
-    this->dt = dt_us/1000000.f;
+    this->dt = dt_us / 1000000.f;
 }
 
 bool FlightController::isArmed()
@@ -230,29 +232,29 @@ void FlightController::logData(float dt, float errorRoll, float errorPitch, floa
         alreadyPrinted = true;
         switch (static_cast<int>(receiver.getSD()))
         {
-            case 1:
-                Serial.println("DT:");
-                for (int i = 0; i < 1000; i++)
-                {
-                    Serial.printf("%.6f \n", dtTelemetry[i]);
-                }
-                break;
-            case 0:
-                Serial.println("Error:");
-                for (int i = 0; i < 1000; i++)
-                {
-                    Serial.printf("%.6f, %.6f, %.6f \n",
-                                  errorTelemetry[i][0], errorTelemetry[i][1], errorTelemetry[i][2]);
-                }
-                break;
-            case -1:
-                Serial.println("Rates:");
-                for (int i = 0; i < 1000; i++)
-                {
-                    Serial.printf("%.6f, %.6f, %.6f \n",
-                                  rateTelemetry[i][0], rateTelemetry[i][1], rateTelemetry[i][2]);
-                }
-                break;
+        case 1:
+            Serial.println("DT:");
+            for (int i = 0; i < 1000; i++)
+            {
+                Serial.printf("%.6f \n", dtTelemetry[i]);
+            }
+            break;
+        case 0:
+            Serial.println("Error:");
+            for (int i = 0; i < 1000; i++)
+            {
+                Serial.printf("%.6f, %.6f, %.6f \n",
+                              errorTelemetry[i][0], errorTelemetry[i][1], errorTelemetry[i][2]);
+            }
+            break;
+        case -1:
+            Serial.println("Rates:");
+            for (int i = 0; i < 1000; i++)
+            {
+                Serial.printf("%.6f, %.6f, %.6f \n",
+                              rateTelemetry[i][0], rateTelemetry[i][1], rateTelemetry[i][2]);
+            }
+            break;
         }
     }
 }
