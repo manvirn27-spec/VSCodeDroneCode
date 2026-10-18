@@ -60,6 +60,8 @@ void loop() {
     hasPreviousSequence = true;
     previousSequence = packet.sequence;
 
+
+    //TODO: get prints from the struct
     Serial.print("#");
     Serial.print(packet.sequence);
     Serial.print(" t=");
