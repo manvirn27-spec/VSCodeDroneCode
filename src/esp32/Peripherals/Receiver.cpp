@@ -151,6 +151,11 @@ bool Receiver::isLinkUp()
     return crsf.isLinkUp();
 }
 
+void Receiver::printChannel(int channel)
+{
+    Serial.printf("channel %d: %f\n", channel, crsf.getChannel(channel));
+}
+
 void Receiver::printAll()
 {
     // Calling the getter methods ensures internal variables update and returns scaled values:

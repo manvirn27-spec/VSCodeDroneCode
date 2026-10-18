@@ -31,12 +31,17 @@ private:
   // Arm switch configuration (CRSF channel values are ~1000-2000us)
   static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
   static const int ARM_THROTTLE_MAX = 1050;  // throttle must be below this to arm
-  float timeCalibrated = -1;
+  long timeCalibrated = -1;
   void updateArmState();
   void arm();
   int disarm();
   void logData(float dt, float errorRoll, float errorPitch, float errorYaw,
                float rollRate, float pitchRate, float yawRate);
+
+private:
+  // Arm switch configuration (CRSF channel values are ~1000-2000us)
+  // static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
+  // static const int ARM_THROTTLE_MAX = 1050;  // throttle must be below this to arm
 
   void updateFaults();
 
@@ -44,6 +49,7 @@ private:
   bool armed = false;
   bool armSwitchWasOn = false; // previous switch position, used to detect OFF->ON edges
   bool calibrated = false;
+  bool armedOnce = false;
 
   Servo motors[4];
 
@@ -76,6 +82,10 @@ private:
   double currentX;
   double currentY;
   double currentZ;
+
+  // double currentX;
+  // double currentY;
+  // double currentZ;
 
   double currentVeloX;
   double currentVeloY;

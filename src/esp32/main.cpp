@@ -20,7 +20,13 @@ void setup()
 
 void loop()
 {
+  // imu.update();
+  // imu.printValues();
+  // leds.indicateStartup();
+  // baro.update();
+  // baro.printAll();
   fc.executeRate();
-  //imu.update();
-  //Serial.println(imu.getRollRate());
+  fc.calibrate(); // this should only run once once and then will not do anything once calibrated
+  // elrs.update();
+  // elrs.printAll();
 }
