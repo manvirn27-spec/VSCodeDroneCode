@@ -1,4 +1,4 @@
-#include "GPS.h"
+/*#include "GPS.h"
 
 #include <Wire.h>
 #include <math.h>
@@ -123,3 +123,4 @@ uint32_t GPS::satilliteCount(){
 uint32_t GPS::charsProcessed(){
   return tinyGps.charsProcessed();
 }
+*/

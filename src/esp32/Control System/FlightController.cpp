@@ -3,16 +3,16 @@
 void FlightController::begin()
 {
     delay(3000); // to let user put the drone down
-
+    Serial.println("Beginning");
     leds.begin();
     leds.indicateStartup();
     motorMixer.stopMotors();
 
-    imu.setupIMU();
+    imu.begin();
     baro.begin();
     receiver.begin();
 }
-
+/*
 void FlightController::calibrate()
 {
     // receiver.printChannel(5);
@@ -43,6 +43,7 @@ void FlightController::calibrate()
         }
     }
 }
+    
 void FlightController::executeAngle()
 {
     leds.indicateBattery(11.9);
@@ -82,10 +83,9 @@ void FlightController::executeAngle()
 
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 }
-
+*/
 void FlightController::executeRate()
 {
-    dt = 0;
     leds.indicateBattery(11.9);
     leds.indicateFaults(2);
     leds.indicateGPS(0);
@@ -95,18 +95,14 @@ void FlightController::executeRate()
     baro.update();
 
     updateArmState();
-    // Serial.println(armed);
-    if (!armed)
-    {
-        motorMixer.stopMotors();
-        return;
-    }
-    updateFaults();
-
+    //Serial.println(armed);
     this->requestedRollAngle = receiver.getRoll();
     this->requestedPitchAngle = receiver.getPitch();
     this->requestedYaw = receiver.getYaw();
     this->requestedThrottle = receiver.getThrottle();
+
+    float requestedRollRate = requestedRollAngle * 6;   // 6 to make 300 dps
+    float requestedPitchRate = requestedPitchAngle * 6; // 6 to make 300dps
 
     this->currentYawRate = imu.getYawRate();
     this->currentPitchRate = imu.getPitchRate();
@@ -114,19 +110,30 @@ void FlightController::executeRate()
     this->currentRollAngle = imu.getRollAngle();
     this->currentPitchAngle = imu.getPitchAngle();
 
-    float requestedRollRate = requestedRollAngle * 6;   // 6 to make 300 dps
-    float requestedPitchRate = requestedPitchAngle * 6; // 6 to make 300dps
+    logData(this->dt, requestedRollRate - currentRollRate, requestedPitchRate - currentPitchRate,
+        requestedYaw - currentYawRate, currentRollRate, currentPitchRate, currentYawRate);
+  
+    updateFaults();
 
     float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
     float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
     float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
 
-    // Serial.printf("Pitch error: %f, Roll error: %f, Yaw Error: %f \n",
-    //     requestedPitchRate - currentPitchRate, requestedRollRate - currentRollRate, requestedYaw, currentYawRate);
-    logData(dt, requestedRollRate - currentRollAngle, requestedPitchRate - currentPitchRate,
-            requestedYaw - currentYawRate, currentRollRate, currentPitchRate, currentYawRate);
+     //Serial.printf("Pitch error: %f, Roll error: %f, Yaw Error: %f \n",
+       //  requestedPitchRate - currentPitchRate, requestedRollRate - currentRollRate, requestedYaw, currentYawRate);
 
+    if (!armed)
+    {
+        motorMixer.stopMotors();
+        return;             //----------------NOTE: EVERYTHING UNDER DOESN'T RUN IF NOT ARMED
+    }
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
+
+    while(micros() - lastTime < 4000){}
+
+    dt_us = (micros() - lastTime);
+    lastTime = micros();
+    this->dt = dt_us/1000000.f;
 }
 
 bool FlightController::isArmed()
@@ -194,7 +201,7 @@ void FlightController::updateFaults() {}
 void FlightController::logData(float dt, float errorRoll, float errorPitch, float errorYaw,
                                float rollRate, float pitchRate, float yawRate)
 {
-    if (receiver.getSB())
+    if (receiver.getSB() == -1)
     {
         if (!alreadyLogged)
         {
@@ -217,11 +224,12 @@ void FlightController::logData(float dt, float errorRoll, float errorPitch, floa
                 numberOfLogs++;
             }
         }
-        if (!alreadyPrinted && receiver.rightBumperPressed())
+    }
+    if (receiver.rightBumperPressed() && !alreadyPrinted)
+    {
+        alreadyPrinted = true;
+        switch (static_cast<int>(receiver.getSD()))
         {
-            alreadyPrinted = true;
-            switch (static_cast<int>(receiver.getSD()))
-            {
             case 1:
                 Serial.println("DT:");
                 for (int i = 0; i < 1000; i++)
@@ -245,7 +253,6 @@ void FlightController::logData(float dt, float errorRoll, float errorPitch, floa
                                   rateTelemetry[i][0], rateTelemetry[i][1], rateTelemetry[i][2]);
                 }
                 break;
-            }
         }
     }
 }

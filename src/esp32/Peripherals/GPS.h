@@ -1,4 +1,4 @@
-#ifndef GPS_H
+/*#ifndef GPS_H
 #define GPS_H
 
 #include <Wire.h>
@@ -34,3 +34,4 @@ class GPS{
 };
 
 #endif
+*/

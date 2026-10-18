@@ -8,7 +8,7 @@
 #include "MotorMixer.h"
 #include "PID.h"
 
-#include "../Peripherals/GPS.h"
+//#include "../Peripherals/GPS.h"
 #include "../Peripherals/IMU.h"
 #include "../Peripherals/Receiver.h"
 #include "../Peripherals/Barometer.h"
@@ -54,7 +54,7 @@ private:
   Servo motors[4];
 
   IMU imu{0.98};
-  GPS gps;
+  //GPS gps;
   Barometer baro;
   Receiver receiver;
   LED leds;
@@ -99,10 +99,13 @@ private:
   bool alreadyLogged = false;
   bool alreadyPrinted = false;
   uint32_t lastTimeLog = 0;
-  uint32_t thresholdLog = 100; // 100 ms delay between logs. Gives 10 seconds of logging
-  uint32_t numberOfLogs = 0;
+  uint8_t thresholdLog = 100; // 100 ms delay between logs. Gives 10 seconds of logging
+  uint16_t numberOfLogs = 0;
 
   float dt;
+  uint32_t dt_us;
+  float lastTime = micros();
+
 };
 
 #endif
