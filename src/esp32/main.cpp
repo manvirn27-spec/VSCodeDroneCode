@@ -26,11 +26,21 @@ FlightController fc;
 
 void setup()
 {
+  Serial.begin(115200);
+  // imu.setupIMU();
+  // leds.begin();
+  // baro.begin();
   fc.begin();
+  // elrs.begin();
 }
 
 void loop()
 {
+  // imu.update();
+  // imu.printValues();
+  // leds.indicateStartup();
+  // baro.update();
+  // baro.printAll();
   fc.executeRate();
   fc.calibrate(); // this should only run once once and then will not do anything once calibrated
   // elrs.update();

@@ -8,7 +8,7 @@
 #include "MotorMixer.h"
 #include "PID.h"
 
-// #include "../Peripherals/GPS.h"
+#include "../Peripherals/GPS.h"
 #include "../Peripherals/IMU.h"
 #include "../Peripherals/Receiver.h"
 #include "../Peripherals/Barometer.h"
@@ -40,8 +40,8 @@ private:
 
 private:
   // Arm switch configuration (CRSF channel values are ~1000-2000us)
-  static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
-  static const int ARM_THROTTLE_MAX = 1050;  // throttle must be below this to arm
+  // static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
+  // static const int ARM_THROTTLE_MAX = 1050;  // throttle must be below this to arm
 
   void updateFaults();
 
@@ -54,7 +54,7 @@ private:
   Servo motors[4];
 
   IMU imu{0.98};
-  // GPS gps;
+  GPS gps;
   Barometer baro;
   Receiver receiver;
   LED leds;
@@ -79,6 +79,10 @@ private:
   double currentPitchAngle;
   double currentYawAngle; // NOTE: Actually GPS heading but called "currentYawAngle" for consistency
 
+  double currentX;
+  double currentY;
+  double currentZ;
+
   // double currentX;
   // double currentY;
   // double currentZ;
@@ -95,12 +99,10 @@ private:
   bool alreadyLogged = false;
   bool alreadyPrinted = false;
   uint32_t lastTimeLog = 0;
-  uint8_t thresholdLog = 100; // 100 ms delay between logs. Gives 10 seconds of logging
-  uint16_t numberOfLogs = 0;
+  uint32_t thresholdLog = 100; // 100 ms delay between logs. Gives 10 seconds of logging
+  uint32_t numberOfLogs = 0;
 
   float dt;
-  uint32_t dt_us;
-  float lastTime = micros();
 };
 
 #endif
