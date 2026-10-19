@@ -171,9 +171,9 @@ void FlightController::logData(float dt, float errorRoll, float errorPitch, floa
 
             }
         } 
-        if(!alreadyPrinted && receiver.getSF()){
+        if(!alreadyPrinted && receiver.rightBumperPressed()){
             alreadyPrinted = true;
-            switch(static_cast<int>(receiver.getSD())){
+            switch(static_cast<int>(receiver.rightBumperPressed())){
                 case 1:
                     Serial.println("DT:");
                     for(int i = 0; i < 1000; i++){
