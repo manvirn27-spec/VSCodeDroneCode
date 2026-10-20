@@ -73,7 +73,7 @@ void FlightController::executeAngle()
     this->currentRollRate = imu.getRollRate();
     this->currentRollAngle = imu.getRollAngle();
     this->currentPitchAngle = imu.getPitchAngle();
-
+    
     float requestedRollRate = rollAnglePID.exePID(requestedRollAngle - currentRollAngle);
     float requestedPitchRate = pitchAnglePID.exePID(requestedPitchAngle - currentPitchAngle);
 
@@ -110,24 +110,31 @@ void FlightController::executeRate()
     this->currentRollAngle = imu.getRollAngle();
     this->currentPitchAngle = imu.getPitchAngle();
 
-    logData(this->dt, requestedRollRate - currentRollRate, requestedPitchRate - currentPitchRate,
-            requestedYaw - currentYawRate, currentRollRate, currentPitchRate, currentYawRate);
+    if(requestedThrottle < 1050){
+        pitchRatePID.resetPID();
+        rollRatePID.resetPID();
+        yawRatePID.resetPID();
+    }
+    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
+    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
+    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
+    
+    logData(this->dt, rollOutput, pitchOutput,
+        yawOutput, currentRollRate, currentPitchRate, currentYawRate);
 
     updateFaults();
-
-    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
-    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
-    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
-
-    // Serial.printf("Pitch error: %f, Roll error: %f, Yaw Error: %f \n",
-    //   requestedPitchRate - currentPitchRate, requestedRollRate - currentRollRate, requestedYaw, currentYawRate);
-
     if (!armed)
     {
         motorMixer.stopMotors();
         return; //----------------NOTE: EVERYTHING UNDER DOESN'T RUN IF NOT ARMED
     }
+
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
+
+    //Serial.printf("Pitch output: %f, Roll output: %f, Yaw output: %f \n",
+      //requestedThrottle, rollOutput, yawOutput);
+
+
 
     while (micros() - lastTime < 4000)
     {

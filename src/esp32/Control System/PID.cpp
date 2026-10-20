@@ -56,8 +56,19 @@ double PID::exePID(double error, double dt2)
 {
   double result = 0;
   double pResult = error * P;
-  double dResult = (error - lastError) / dt2;
-  double iResult = error * I + lastI;
+  double dResult = D * (error - lastError) / dt2;
+
+  totalError = totalError + (error * dt2);
+  double iResult = totalError * I;
+
+  if(iResult > maxI){
+    iResult = maxI;
+    totalError = maxI/I;
+  }
+  else if (iResult < -maxI) {
+      iResult = -maxI;
+      totalError = -maxI / I; 
+  }
   result = pResult + dResult + iResult;
 
   lastError = error;
@@ -83,6 +94,14 @@ double PID::exePID(double error)
 
   totalError = totalError + error * dt;
   double iResult = totalError * I;
+  if(iResult > maxI){
+    iResult = maxI;
+    totalError = maxI/I;
+  }
+  else if (iResult < -maxI) {
+      iResult = -maxI;
+      totalError = -maxI / I; 
+  }
   result = pResult + dResult + iResult;
 
   // Debug print
@@ -94,7 +113,6 @@ double PID::exePID(double error)
 void PID::resetPID()
 {
   lastI = 0;
-  lastError = 0;
   totalError = 0;
   lastTime = millis(); // so the first dt after a reset is small, not the whole disarmed period
 }
