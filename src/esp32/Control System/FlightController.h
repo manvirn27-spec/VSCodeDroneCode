@@ -59,12 +59,12 @@ private:
   Receiver receiver;
   LED leds;
 
-  MotorMixer motorMixer{39, 40, 41, 42};
+  MotorMixer motorMixer;
   PID rollAnglePID{1.1, 0, 0};
   PID pitchAnglePID{1.1, 0, 0};
-  PID rollRatePID{1.5f, 2.f, 0.03f}; //was 0.45, 3, 0.02
-  PID pitchRatePID{1.5f, 2.f, 0.03f};
-  PID yawRatePID{0.8f, 2.f, 0};
+  PID rollRatePID{0.45f, 3.f, 0.02f}; //was 0.45, 3, 0.02
+  PID pitchRatePID{0.45f, 3.f, 0.02f};
+  PID yawRatePID{3.f, 12.f, 0}; //was 3, 12, 0
 
   double requestedRollAngle;
   double requestedPitchAngle;

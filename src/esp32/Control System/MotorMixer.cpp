@@ -1,12 +1,30 @@
 #include "MotorMixer.h"
-#include <ESP32Servo.h>
+#include "driver/ledc.h"
+#include <Arduino.h>
 
-MotorMixer::MotorMixer(int mot1, int mot2, int mot3, int mot4)
+MotorMixer::MotorMixer()
 {
-  motors[0].attach(mot1);
-  motors[1].attach(mot2);
-  motors[2].attach(mot3);
-  motors[3].attach(mot4);
+}
+
+void MotorMixer::begin(){
+  ledcSetup(0, freq, resolution);
+  ledcAttachPin(MOT1_PIN, 0);
+
+  ledcSetup(1, freq, resolution);
+  ledcAttachPin(MOT2_PIN, 1);
+
+  ledcSetup(2, freq, resolution);
+  ledcAttachPin(MOT3_PIN, 2);
+
+
+  ledcSetup(3, freq, resolution);
+  ledcAttachPin(MOT4_PIN, 3);
+
+  
+
+  calibrateMotors();
+  stopMotors();
+  delay(3000);
 }
 
 void MotorMixer::spinMotors(int throttle, int rollControl, int pitchControl, int yawControl)
@@ -43,35 +61,41 @@ void MotorMixer::spinMotors(int throttle, int rollControl, int pitchControl, int
     MotorInput4 = ThrottleIdle;
 
   /*Debug Prints:*/
-  // Serial.printf("Mot1: %f, Mot2: %f, Mot3: %f, Mot 4: %f \n",
-  //   MotorInput1, MotorInput2, MotorInput3, MotorInput4);
-
-  motors[0].writeMicroseconds(MotorInput1);
-  motors[1].writeMicroseconds(MotorInput2);
-  motors[2].writeMicroseconds(MotorInput3);
-  motors[3].writeMicroseconds(MotorInput4);
+  Serial.printf("Mot1: %f, Mot2: %f, Mot3: %f, Mot 4: %f \n",
+    MotorInput1, MotorInput2, MotorInput3, MotorInput4);
+  uint32_t duty1 = (MotorInput1 / 20000.0) * ((1 << resolution) - 1);
+  uint32_t duty2 = (MotorInput2 / 20000.0) * ((1 << resolution) - 1);
+  uint32_t duty3 = (MotorInput3 / 20000.0) * ((1 << resolution) - 1);
+  uint32_t duty4 = (MotorInput4 / 20000.0) * ((1 << resolution) - 1);
+  
+  ledcWrite(0, duty1);
+  ledcWrite(1, duty2);
+  ledcWrite(2, duty3);
+  ledcWrite(3, duty4);
 }
 
 // Commands all motors to the cutoff value (used while disarmed).
 void MotorMixer::stopMotors()
 {
-  for (int i = 0; i < 4; i++)
-  {
-    motors[i].writeMicroseconds(1000);
-  }
+  uint32_t duty = (1000.f / 20000.0) * ((1 << resolution) - 1);
+  
+  ledcWrite(0, duty);
+  ledcWrite(1, duty);
+  ledcWrite(2, duty);
+  ledcWrite(3, duty);
 }
 
 void MotorMixer::calibrateMotors()
 {
-  for (int i = 0; i < 4; i++)
-  {
-    motors[i].writeMicroseconds(2000);
-    // Serial.print("vroooommm");
-  }
+  uint32_t duty = (2000.f / 20000.0) * ((1 << resolution) - 1);
+  ledcWrite(0, duty);
+  ledcWrite(1, duty);
+  ledcWrite(2, duty);
+  ledcWrite(3, duty);
   delay(2000);
-  for (int i = 0; i < 4; i++)
-  {
-    motors[i].writeMicroseconds(1000);
-    // Serial.print("ending calibration from calibrateMotors() ");
-  }
+  duty = (1000.f / 20000.0) * ((1 << resolution) - 1);
+  ledcWrite(0, duty);
+  ledcWrite(1, duty);
+  ledcWrite(2, duty);
+  ledcWrite(3, duty);
 }

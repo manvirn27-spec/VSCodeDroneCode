@@ -6,6 +6,7 @@ void FlightController::begin()
     Serial.println("Beginning");
     leds.begin();
     leds.indicateStartup();
+    motorMixer.begin();
     motorMixer.stopMotors();
 
     imu.begin();
