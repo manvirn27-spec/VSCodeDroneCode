@@ -8,6 +8,39 @@
 #include "Control System/MotorMixer.h"
 #include "Control System/FlightController.h" //Ultimately only include file
 
+FlightController fc;
+
+void setup(){
+  fc.begin();
+}
+
+void loop(){
+  fc.executeRate();
+  fc.calibrate();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 const int freq = 50;       // 50Hz for standard ESCs/servos
 const int resolution = 14; // 14-bit resolution
 
@@ -65,3 +98,4 @@ void loop() {
 
   delay(3000);
 }
+*/
