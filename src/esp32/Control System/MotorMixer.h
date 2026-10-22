@@ -2,6 +2,7 @@
 #define MotorMixer_H
 #include <ESP32Servo.h>
 #include <Arduino.h>
+#include "driver/ledc.h"
 
 class MotorMixer{
   public:
