@@ -60,23 +60,8 @@ void loop() {
     hasPreviousSequence = true;
     previousSequence = packet.sequence;
 
-
-    //TODO: get prints from the struct
-    Serial.print("#");
-    Serial.print(packet.sequence);
-    Serial.print(" t=");
-    Serial.print(packet.uptimeMs / 1000.0f, 1);
-    Serial.print("s roll=");
-    Serial.print(packet.rollCentideg / 100.0f, 2);
-    Serial.print(" pitch=");
-    Serial.print(packet.pitchCentideg / 100.0f, 2);
-    Serial.print(" yaw=");
-    Serial.print(packet.yawCentideg / 100.0f, 2);
-    Serial.print(" alt=");
-    Serial.print(packet.altitudeCm / 100.0f, 2);
-    Serial.print("m batt=");
-    Serial.print(packet.batteryMv / 1000.0f, 2);
-    Serial.print("V | RSSI=");
+    printTelemetry(Serial, packet);
+    Serial.print(" | RSSI=");
     Serial.print(radio.getRSSI(), 1);
     Serial.print("dBm SNR=");
     Serial.print(radio.getSNR(), 1);
