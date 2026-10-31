@@ -8,7 +8,7 @@ class TelemComms{
         void send();
         void getData();
     private:
-        struct __attribute(packed()) telem{
+        struct __attribute__((packed)) telem{
 
             //if we want to optimze, we can pack packetNumber and uptimeMs into 1 uint32_t
             uint16_t packetNumber; //enough for ~1.8h of uptime
@@ -26,8 +26,8 @@ class TelemComms{
             uint32_t gpsLatitude;
             uint32_t heading;
 
-        }
-}
+        };
+};
 
 
 #endif
