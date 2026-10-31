@@ -64,7 +64,7 @@ private:
   PID pitchAnglePID{1.1, 0, 0};
   PID rollRatePID{0.45f, 3.f, 0.02f}; //was 0.45, 3, 0.02
   PID pitchRatePID{0.45f, 3.f, 0.02f};
-  PID yawRatePID{3.f, 12.f, 0}; //was 3, 12, 0
+  PID yawRatePID{1.f, 2.5f, 0}; //was 3, 12, 0
 
   double requestedRollAngle;
   double requestedPitchAngle;
@@ -99,7 +99,7 @@ private:
   bool alreadyLogged = false;
   bool alreadyPrinted = false;
   uint32_t lastTimeLog = 0;
-  uint8_t thresholdLog = 100; // 100 ms delay between logs. Gives 10 seconds of logging
+  uint8_t thresholdLog = 10; // 100 ms delay between logs. Gives 10 seconds of logging
   uint16_t numberOfLogs = 0;
 
   float dt;

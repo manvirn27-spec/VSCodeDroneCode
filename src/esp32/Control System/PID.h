@@ -23,7 +23,7 @@ private:
   double D;
 
   double lastI;
-  float maxI = 100.f;
+  float maxI = 250.f;
 
   double lastError;
   double totalError;

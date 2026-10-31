@@ -114,7 +114,7 @@ void FlightController::executeRate()
     this->currentRollAngle = imu.getRollAngle();
     this->currentPitchAngle = imu.getPitchAngle();
 
-    if(requestedThrottle < 1050){
+    if(requestedThrottle < 1000){
         pitchRatePID.resetPID();
         rollRatePID.resetPID();
         yawRatePID.resetPID();
@@ -135,8 +135,8 @@ void FlightController::executeRate()
 
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 
-    //Serial.printf("Pitch output: %f, Roll output: %f, Yaw output: %f \n",
-      //requestedThrottle, rollOutput, yawOutput);
+    //Serial.printf("Pitch output: %f, YawRate: %f, Yaw output: %f \n",
+      //requestedThrottle, currentYawRate, yawOutput);
 
 
 

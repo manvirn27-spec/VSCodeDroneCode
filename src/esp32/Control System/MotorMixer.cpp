@@ -40,10 +40,10 @@ void MotorMixer::spinMotors(int throttle, int rollControl, int pitchControl, int
 
   if (throttle > 1800)
     throttle = 1800;
-  MotorInput1 = 1.024 * (throttle + rollControl - pitchControl - yawControl);
-  MotorInput2 = 1.024 * (throttle + rollControl + pitchControl + yawControl);
-  MotorInput3 = 1.024 * (throttle - rollControl - pitchControl + yawControl);
-  MotorInput4 = 1.024 * (throttle - rollControl + pitchControl - yawControl);
+  MotorInput1 = 1.024 * (throttle + rollControl - pitchControl + yawControl); //yaw was -
+  MotorInput2 = 1.024 * (throttle + rollControl + pitchControl - yawControl); //yaw was +
+  MotorInput3 = 1.024 * (throttle - rollControl - pitchControl - yawControl); //yaw was +
+  MotorInput4 = 1.024 * (throttle - rollControl + pitchControl + yawControl); //yaw was -
 
   if (MotorInput1 > 2000)
     MotorInput1 = 1999;
