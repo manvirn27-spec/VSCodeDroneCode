@@ -53,7 +53,7 @@ private:
 
   Servo motors[4];
 
-  IMU imu{0.98};
+  IMU imu{0.501};
   //GPS gps;
   Barometer baro;
   Receiver receiver;
@@ -62,9 +62,9 @@ private:
   MotorMixer motorMixer;
   PID rollAnglePID{1.1, 0, 0};
   PID pitchAnglePID{1.1, 0, 0};
-  PID rollRatePID{0.45f, 3.f, 0.02f}; //was 0.45, 3, 0.02
-  PID pitchRatePID{0.45f, 3.f, 0.02f};
-  PID yawRatePID{1.f, 2.5f, 0}; //was 3, 12, 0
+  PID rollRatePID{1.8f, 1.2f, 0.02f}; //1.15, 1.2, 0.003
+  PID pitchRatePID{1.8f, 1.2f, 0.02f};
+  PID yawRatePID{1.5f, 3.5f, 0}; //1.5, 3.5, 0
 
   double requestedRollAngle;
   double requestedPitchAngle;
@@ -92,7 +92,7 @@ private:
   double currentVeloZ;
 
   float dtTelemetry[1000];
-  float errorTelemetry[1000][3];
+  float errorTelemetry[1000][6];
   float rateTelemetry[1000][3];
   float angleTelmetry[1000][3];
 

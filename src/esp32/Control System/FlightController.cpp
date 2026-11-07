@@ -59,33 +59,50 @@ void FlightController::executeAngle()
     baro.update();
 
     updateArmState();
-    // Serial.println(armed);
-    if (!armed)
-    {
-        motorMixer.stopMotors();
-        return;
-    }
-    updateFaults();
+
+
+    this->currentYawRate = imu.getYawRate();
+    this->currentPitchRate = imu.getPitchRate();
+    this->currentRollRate = imu.getRollRate();
+    this->currentRollAngle = imu.getRollAngle(); //TODO: IMU class needs filtering
+    this->currentPitchAngle = imu.getPitchAngle();
 
     this->requestedRollAngle = receiver.getRoll();
     this->requestedPitchAngle = receiver.getPitch();
     this->requestedYaw = receiver.getYaw();
     this->requestedThrottle = receiver.getThrottle();
 
-    this->currentYawRate = imu.getYawRate();
-    this->currentPitchRate = imu.getPitchRate();
-    this->currentRollRate = imu.getRollRate();
-    this->currentRollAngle = imu.getRollAngle();
-    this->currentPitchAngle = imu.getPitchAngle();
-    
-    float requestedRollRate = rollAnglePID.exePID(requestedRollAngle - currentRollAngle);
-    float requestedPitchRate = pitchAnglePID.exePID(requestedPitchAngle - currentPitchAngle);
+    float requestedRollRate = rollAnglePID.exePID(requestedRollAngle - currentRollAngle, dt);
+    float requestedPitchRate = pitchAnglePID.exePID(requestedPitchAngle - currentPitchAngle, dt);
 
-    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
-    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
-    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
+    if(requestedThrottle < 1000){
+        pitchRatePID.resetPID();
+        rollRatePID.resetPID();
+        yawRatePID.resetPID();
+    }
+    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
+    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
+    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
+    
+    logData(this->dt, requestedRollRate, requestedPitchRate,
+        requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
+
+    updateFaults();
+    if (!armed)
+    {
+        motorMixer.stopMotors();
+        return; //----------------NOTE: EVERYTHING UNDER DOESN'T RUN IF NOT ARMED
+    }
 
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
+
+    while (micros() - lastTime < 4000)
+    {
+    }
+
+    dt_us = (micros() - lastTime);
+    lastTime = micros();
+    this->dt = dt_us / 1000000.f;
 }
 
 void FlightController::executeRate()
@@ -105,9 +122,8 @@ void FlightController::executeRate()
     this->requestedYaw = receiver.getYaw();
     this->requestedThrottle = receiver.getThrottle();
 
-    float requestedRollRate = requestedRollAngle * 6;   // 6 to make 300 dps
-    float requestedPitchRate = requestedPitchAngle * 6; // 6 to make 300dps
-
+    float requestedRollRate = requestedRollAngle * 3;   // 6 to make 300 dps
+    float requestedPitchRate = requestedPitchAngle * 3; // 6 to make 300dps
     this->currentYawRate = imu.getYawRate();
     this->currentPitchRate = imu.getPitchRate();
     this->currentRollRate = imu.getRollRate();
@@ -123,8 +139,8 @@ void FlightController::executeRate()
     float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
     float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
     
-    logData(this->dt, rollOutput, pitchOutput,
-        yawOutput, currentRollRate, currentPitchRate, currentYawRate);
+    logData(this->dt, requestedRollRate, requestedPitchRate,
+        requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
 
     updateFaults();
     if (!armed)
@@ -134,11 +150,6 @@ void FlightController::executeRate()
     }
 
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
-
-    //Serial.printf("Pitch output: %f, YawRate: %f, Yaw output: %f \n",
-      //requestedThrottle, currentYawRate, yawOutput);
-
-
 
     while (micros() - lastTime < 4000)
     {
@@ -211,7 +222,7 @@ int FlightController::disarm()
 
 void FlightController::updateFaults() {}
 
-void FlightController::logData(float dt, float errorRoll, float errorPitch, float errorYaw,
+void FlightController::logData(float dt, float requestedRoll, float requestedPitch, float requestedYaw,
                                float rollRate, float pitchRate, float yawRate)
 {
     if (receiver.getSB() == -1)
@@ -227,9 +238,14 @@ void FlightController::logData(float dt, float errorRoll, float errorPitch, floa
                     return;
                 }
                 dtTelemetry[numberOfLogs] = dt;
-                errorTelemetry[numberOfLogs][0] = errorRoll;
-                errorTelemetry[numberOfLogs][1] = errorPitch;
-                errorTelemetry[numberOfLogs][2] = errorYaw;
+
+                errorTelemetry[numberOfLogs][0] = requestedRoll;
+                errorTelemetry[numberOfLogs][1] = rollRate;
+                errorTelemetry[numberOfLogs][2] = requestedPitch;
+                errorTelemetry[numberOfLogs][3] = pitchRate;
+                errorTelemetry[numberOfLogs][4] = requestedYaw;
+                errorTelemetry[numberOfLogs][5] = yawRate;
+
                 rateTelemetry[numberOfLogs][0] = rollRate;
                 rateTelemetry[numberOfLogs][1] = pitchRate;
                 rateTelemetry[numberOfLogs][2] = yawRate;
@@ -254,8 +270,10 @@ void FlightController::logData(float dt, float errorRoll, float errorPitch, floa
             Serial.println("Error:");
             for (int i = 0; i < 1000; i++)
             {
-                Serial.printf("%.6f, %.6f, %.6f \n",
-                              errorTelemetry[i][0], errorTelemetry[i][1], errorTelemetry[i][2]);
+                Serial.printf("R_Req: %.6f, R_Act: %.6f | P_Req: %.6f, P_Act: %.6f | Y_Req: %.6f, Y_Act: %.6f\n",
+                      errorTelemetry[i][0], errorTelemetry[i][1], 
+                      errorTelemetry[i][2], errorTelemetry[i][3], 
+                      errorTelemetry[i][4], errorTelemetry[i][5]);
             }
             break;
         case -1:

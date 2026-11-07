@@ -1,3 +1,4 @@
+/*
 #ifndef TELEMCOMMS_H
 #define TELEMCOMMS_H
 
@@ -27,3 +28,4 @@ class TelemComms{
 
 
 #endif
+*/
