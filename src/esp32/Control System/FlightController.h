@@ -62,8 +62,8 @@ private:
   MotorMixer motorMixer;
   PID rollAnglePID{1.1, 0, 0};
   PID pitchAnglePID{1.1, 0, 0};
-  PID rollRatePID{1.8f, 1.2f, 0.02f}; //1.15, 1.2, 0.003
-  PID pitchRatePID{1.8f, 1.2f, 0.02f};
+  PID rollRatePID{1.3f, 1.2f, 0.003f}; //1.15, 1.2, 0.003
+  PID pitchRatePID{1.3f, 1.2f, 0.003f};
   PID yawRatePID{1.5f, 3.5f, 0}; //1.5, 3.5, 0
 
   double requestedRollAngle;
