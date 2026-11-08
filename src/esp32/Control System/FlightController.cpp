@@ -2,15 +2,14 @@
 
 void FlightController::begin()
 {
-    
+
     motorMixer.begin();
     motorMixer.stopMotors();
-    
+
     delay(3000); // to let user put the drone down
     Serial.println("Beginning");
     leds.begin();
     leds.indicateStartup();
-    
 
     imu.begin();
     baro.begin();
@@ -60,11 +59,10 @@ void FlightController::executeAngle()
 
     updateArmState();
 
-
     this->currentYawRate = imu.getYawRate();
     this->currentPitchRate = imu.getPitchRate();
     this->currentRollRate = imu.getRollRate();
-    this->currentRollAngle = imu.getRollAngle(); //TODO: IMU class needs filtering
+    this->currentRollAngle = imu.getRollAngle(); // TODO: IMU class needs filtering
     this->currentPitchAngle = imu.getPitchAngle();
 
     this->requestedRollAngle = receiver.getRoll();
@@ -74,18 +72,18 @@ void FlightController::executeAngle()
 
     float requestedRollRate = rollAnglePID.exePID(requestedRollAngle - currentRollAngle, dt);
     float requestedPitchRate = pitchAnglePID.exePID(requestedPitchAngle - currentPitchAngle, dt);
-
-    if(requestedThrottle < 1000){
+    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
+    if (requestedThrottle < 1000)
+    {
         pitchRatePID.resetPID();
         rollRatePID.resetPID();
         yawRatePID.resetPID();
     }
-    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
-    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
-    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
-    
+    // float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
+    // float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
+
     logData(this->dt, requestedRollRate, requestedPitchRate,
-        requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
+            requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
 
     updateFaults();
     if (!armed)
@@ -94,7 +92,7 @@ void FlightController::executeAngle()
         return; //----------------NOTE: EVERYTHING UNDER DOESN'T RUN IF NOT ARMED
     }
 
-    motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
+    motorMixer.spinMotors(requestedThrottle, requestedRollRate, requestedPitchRate, yawOutput);
 
     while (micros() - lastTime < 4000)
     {
@@ -130,7 +128,8 @@ void FlightController::executeRate()
     this->currentRollAngle = imu.getRollAngle();
     this->currentPitchAngle = imu.getPitchAngle();
 
-    if(requestedThrottle < 1000){
+    if (requestedThrottle < 1000)
+    {
         pitchRatePID.resetPID();
         rollRatePID.resetPID();
         yawRatePID.resetPID();
@@ -138,9 +137,9 @@ void FlightController::executeRate()
     float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
     float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
     float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
-    
+
     logData(this->dt, requestedRollRate, requestedPitchRate,
-        requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
+            requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
 
     updateFaults();
     if (!armed)
@@ -271,9 +270,9 @@ void FlightController::logData(float dt, float requestedRoll, float requestedPit
             for (int i = 0; i < 1000; i++)
             {
                 Serial.printf("R_Req: %.6f, R_Act: %.6f | P_Req: %.6f, P_Act: %.6f | Y_Req: %.6f, Y_Act: %.6f\n",
-                      errorTelemetry[i][0], errorTelemetry[i][1], 
-                      errorTelemetry[i][2], errorTelemetry[i][3], 
-                      errorTelemetry[i][4], errorTelemetry[i][5]);
+                              errorTelemetry[i][0], errorTelemetry[i][1],
+                              errorTelemetry[i][2], errorTelemetry[i][3],
+                              errorTelemetry[i][4], errorTelemetry[i][5]);
             }
             break;
         case -1:

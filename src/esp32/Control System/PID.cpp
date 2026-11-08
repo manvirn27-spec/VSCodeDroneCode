@@ -61,13 +61,15 @@ double PID::exePID(double error, double dt2)
   totalError = totalError + (error * dt2);
   double iResult = totalError * I;
 
-  if(iResult > maxI){
+  if (iResult > maxI)
+  {
     iResult = maxI;
-    totalError = maxI/I;
+    totalError = maxI / I;
   }
-  else if (iResult < -maxI) {
-      iResult = -maxI;
-      totalError = -maxI / I; 
+  else if (iResult < -maxI)
+  {
+    iResult = -maxI;
+    totalError = -maxI / I;
   }
   result = pResult + dResult + iResult;
 
@@ -94,13 +96,15 @@ double PID::exePID(double error)
 
   totalError = totalError + error * dt;
   double iResult = totalError * I;
-  if(iResult > maxI){
+  if (iResult > maxI)
+  {
     iResult = maxI;
-    totalError = maxI/I;
+    totalError = maxI / I;
   }
-  else if (iResult < -maxI) {
-      iResult = -maxI;
-      totalError = -maxI / I; 
+  else if (iResult < -maxI)
+  {
+    iResult = -maxI;
+    totalError = -maxI / I;
   }
   result = pResult + dResult + iResult;
 
@@ -110,6 +114,7 @@ double PID::exePID(double error)
   lastError = error;
   return result;
 }
+
 void PID::resetPID()
 {
   lastI = 0;
