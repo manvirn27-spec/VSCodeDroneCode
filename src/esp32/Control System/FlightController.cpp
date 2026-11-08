@@ -59,48 +59,52 @@ void FlightController::executeAngle()
 
     updateArmState();
 
+    // get angles and angular velocity readings from drone
     this->currentYawRate = imu.getYawRate();
     this->currentPitchRate = imu.getPitchRate();
     this->currentRollRate = imu.getRollRate();
     this->currentRollAngle = imu.getRollAngle(); // TODO: IMU class needs filtering
     this->currentPitchAngle = imu.getPitchAngle();
 
+    // get angle and angular velocity inputs from controller
     this->requestedRollAngle = receiver.getRoll();
     this->requestedPitchAngle = receiver.getPitch();
     this->requestedYaw = receiver.getYaw();
     this->requestedThrottle = receiver.getThrottle();
 
+    // calculate the goal rates given the current error
     float requestedRollRate = rollAnglePID.exePID(requestedRollAngle - currentRollAngle, dt);
     float requestedPitchRate = pitchAnglePID.exePID(requestedPitchAngle - currentPitchAngle, dt);
-    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
+
     if (requestedThrottle < 1000)
     {
         pitchRatePID.resetPID();
         rollRatePID.resetPID();
         yawRatePID.resetPID();
     }
-    // float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
-    // float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
+    // calculate the output on the motors based on the error of the goal rate and the current rate
+    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
+    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
+    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
 
     logData(this->dt, requestedRollRate, requestedPitchRate,
             requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
 
     updateFaults();
+    dt_us = (micros() - lastTime);
+    lastTime = micros();
+    this->dt = dt_us / 1000000.f;
     if (!armed)
     {
         motorMixer.stopMotors();
         return; //----------------NOTE: EVERYTHING UNDER DOESN'T RUN IF NOT ARMED
     }
 
-    motorMixer.spinMotors(requestedThrottle, requestedRollRate, requestedPitchRate, yawOutput);
+    motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 
     while (micros() - lastTime < 4000)
     {
     }
-
-    dt_us = (micros() - lastTime);
-    lastTime = micros();
-    this->dt = dt_us / 1000000.f;
 }
 
 void FlightController::executeRate()
@@ -133,6 +137,8 @@ void FlightController::executeRate()
         pitchRatePID.resetPID();
         rollRatePID.resetPID();
         yawRatePID.resetPID();
+        pitchAnglePID.resetPID();
+        rollAnglePID.resetPID();
     }
     float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
     float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
@@ -142,6 +148,9 @@ void FlightController::executeRate()
             requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
 
     updateFaults();
+    dt_us = (micros() - lastTime);
+    lastTime = micros();
+    this->dt = dt_us / 1000000.f;
     if (!armed)
     {
         motorMixer.stopMotors();
@@ -153,10 +162,6 @@ void FlightController::executeRate()
     while (micros() - lastTime < 4000)
     {
     }
-
-    dt_us = (micros() - lastTime);
-    lastTime = micros();
-    this->dt = dt_us / 1000000.f;
 }
 
 bool FlightController::isArmed()
