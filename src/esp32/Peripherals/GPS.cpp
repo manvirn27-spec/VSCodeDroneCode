@@ -1,4 +1,4 @@
-/*#include "GPS.h"
+#include "GPS.h"
 
 #include <Wire.h>
 #include <math.h>
@@ -10,27 +10,27 @@ GPS::GPS() : GPSSerial (2) {} //constrctor defines UART for GPSSerial
 void GPS::initCompass(){
  delay(100);
 
- Wire.beginTransmission(QMC5883P_ADDR);
- Wire.write(0x0A);
- Wire.write(0x80);
- Wire.endTransmission();
+ Wire1.beginTransmission(QMC5883P_ADDR);
+ Wire1.write(0x0A);
+ Wire1.write(0x80);
+ Wire1.endTransmission();
  delay(100);
 
- Wire.beginTransmission(QMC5883P_ADDR);
- Wire.write(0x0A);
- Wire.write(0xCF);
- Wire.endTransmission();
+ Wire1.beginTransmission(QMC5883P_ADDR);
+ Wire1.write(0x0A);
+ Wire1.write(0xCF);
+ Wire1.endTransmission();
  delay(10);
 
- Wire.beginTransmission(QMC5883P_ADDR);
- Wire.write(0x0B);
- Wire.write(0x08);
- Wire.endTransmission();
+ Wire1.beginTransmission(QMC5883P_ADDR);
+ Wire1.write(0x0B);
+ Wire1.write(0x08);
+ Wire1.endTransmission();
  delay(10);
 }
 
 void GPS::begin(){
-  Wire.begin(I2C_SDA, I2C_SCL);
+  Wire1.begin(I2C_SDA, I2C_SCL);
   GPSSerial.begin(GPSBaud, SERIAL_8N1, RXPin, TXPin);
   initCompass();
   Serial.println("GPS + Compass ready. Preparing...");
@@ -48,11 +48,11 @@ void GPS::readCompass(int16_t &x, int16_t &y, int16_t &z){
 uint8_t status = 0;
  int timeout = 1000;
  while (!(status & 0x01) && timeout > 0) {
-   Wire.beginTransmission(QMC5883P_ADDR);
-   Wire.write(0x09);
-   Wire.endTransmission(false);
-   Wire.requestFrom(QMC5883P_ADDR, 1);
-   if (Wire.available()) status = Wire.read();
+   Wire1.beginTransmission(QMC5883P_ADDR);
+   Wire1.write(0x09);
+   Wire1.endTransmission(false);
+   Wire1.requestFrom(QMC5883P_ADDR, 1);
+   if (Wire1.available()) status = Wire1.read();
    timeout--;
    delay(1);
  }
@@ -64,19 +64,19 @@ uint8_t status = 0;
    return;
  }
 
- Wire.beginTransmission(QMC5883P_ADDR);
- Wire.write(0x01);
- Wire.endTransmission(false);
- Wire.requestFrom(QMC5883P_ADDR, 6);
+ Wire1.beginTransmission(QMC5883P_ADDR);
+ Wire1.write(0x01);
+ Wire1.endTransmission(false);
+ Wire1.requestFrom(QMC5883P_ADDR, 6);
 
 
- if (Wire.available() == 6) {
-   byte x_lsb = Wire.read();
-   byte x_msb = Wire.read();
-   byte y_lsb = Wire.read();
-   byte y_msb = Wire.read();
-   byte z_lsb = Wire.read();
-   byte z_msb = Wire.read();
+ if (Wire1.available() == 6) {
+   byte x_lsb = Wire1.read();
+   byte x_msb = Wire1.read();
+   byte y_lsb = Wire1.read();
+   byte y_msb = Wire1.read();
+   byte z_lsb = Wire1.read();
+   byte z_msb = Wire1.read();
 
 
    x = (x_msb << 8) | x_lsb;
@@ -123,4 +123,3 @@ uint32_t GPS::satilliteCount(){
 uint32_t GPS::charsProcessed(){
   return tinyGps.charsProcessed();
 }
-*/

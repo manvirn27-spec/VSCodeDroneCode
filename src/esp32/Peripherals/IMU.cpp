@@ -40,7 +40,7 @@ void IMU::update(){
 
   pitchAngle = -atan(accel.acceleration.y/sqrt(accel.acceleration.x*accel.acceleration.x+accel.acceleration.z*accel.acceleration.z))/(3.142/180);
   rollAngle = -atan(accel.acceleration.x/sqrt(accel.acceleration.y*accel.acceleration.y+accel.acceleration.z*accel.acceleration.z))/(3.142/180);
-  //filter the rollangle using Kalman
+  //filter the rollangle using Kalman using gyro data
 }
 void IMU::calibrateIMU(){
 

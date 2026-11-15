@@ -10,9 +10,9 @@
 class Barometer{
     public:
         void update();
-        void begin();
+        void begin(); //ENSURE NOT CALLED IN FLIGHT. uses delay()
 
-        float getAltitude(float pressure); //Units: Feet
+        float getAltitude(float pressure); //Units: Feet, relative to start
         float getPressure(); //Units: inHg
         float getTemperature(); //Units: F
 
@@ -23,6 +23,12 @@ class Barometer{
         float altitude;
         float pressure;
         float temperature;
+
+
+        //test variables
+        uint16_t numSuccess = 0;
+        uint16_t numFail = 0;
+        uint32_t lastTime = 0;
 
 };
 

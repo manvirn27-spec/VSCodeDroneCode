@@ -18,9 +18,11 @@ class FlightController
 {
 public:
   void begin();
-  void calibrate();
-  void executeAngle();
-  void executeRate();
+  void calibrate(Receiver &receiver);
+
+  //void executeAngle();
+  void executeRate(IMU &imu, Receiver &receiver, LED &leds);
+
   void executeHoldPosition();
   void executeAutonomous();
   void executeRTH();
@@ -28,26 +30,24 @@ public:
   bool isArmed();
 
 private:
-  // Arm switch configuration (CRSF channel values are ~1000-2000us)
-  static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
-  static const int ARM_THROTTLE_MAX = 1050;  // throttle must be below this to arm
+  static const int ARM_SWITCH_THRESHOLD = 0; 
+  static const int ARM_THROTTLE_MAX = 1050;
   long timeCalibrated = -1;
-  void updateArmState();
+  void updateArmState(Receiver &receiver);
   void arm();
   int disarm();
-  void logData(float dt, float errorRoll, float errorPitch, float errorYaw,
-               float rollRate, float pitchRate, float yawRate);
+  //BROKEN:
+  //void logData(float dt, float errorRoll, float errorPitch, float errorYaw,
+  //             float rollRate, float pitchRate, float yawRate);
 
 private:
-  // Arm switch configuration (CRSF channel values are ~1000-2000us)
-  // static const int ARM_SWITCH_THRESHOLD = 0; // aux above this = switch ON
-  // static const int ARM_THROTTLE_MAX = 1050;  // throttle must be below this to arm
+
 
   void updateFaults();
 
   int faultNumber = 0;
   bool armed = false;
-  bool armSwitchWasOn = false; // previous switch position, used to detect OFF->ON edges
+  bool armSwitchWasOn = false;
   bool calibrated = false;
   bool armedOnce = false;
 
@@ -55,9 +55,6 @@ private:
 
   IMU imu{0.501};
   //GPS gps;
-  Barometer baro;
-  Receiver receiver;
-  LED leds;
 
   MotorMixer motorMixer;
   PID rollAnglePID{1.1, 0, 0};

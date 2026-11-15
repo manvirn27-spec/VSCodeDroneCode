@@ -8,15 +8,31 @@
 #include "Control System/MotorMixer.h"
 #include "Control System/FlightController.h" //Ultimately only include file
 
+IMU imu{0.501};
+Barometer baro;
+Receiver receiver;
 FlightController fc;
+LED leds;
+
 
 void setup(){
+  Serial.begin(115200);
+
+  imu.begin();
+  baro.begin();
+  receiver.begin();
+
+  leds.begin();
+  leds.indicateStartup();
+
   fc.begin();
 }
 
 void loop(){
-  fc.executeRate();
-  fc.calibrate();
+  imu.update();
+  receiver.update();
+
+  fc.executeRate(imu, receiver, leds);
 }
 
 
