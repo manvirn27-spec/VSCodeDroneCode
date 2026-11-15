@@ -17,6 +17,7 @@ LED leds;
 
 void setup(){
   Serial.begin(115200);
+  fc.begin();
 
   imu.begin();
   baro.begin();
@@ -25,7 +26,7 @@ void setup(){
   leds.begin();
   leds.indicateStartup();
 
-  fc.begin();
+  delay(3000);
 }
 
 void loop(){
