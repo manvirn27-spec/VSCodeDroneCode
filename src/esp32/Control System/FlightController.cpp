@@ -8,16 +8,9 @@ void FlightController::begin()
     
     delay(3000); // to let user put the drone down
     Serial.println("Beginning");
-    leds.begin();
-    leds.indicateStartup();
-    
-
-    imu.begin();
-    baro.begin();
-    receiver.begin();
 }
 
-void FlightController::calibrate()
+void FlightController::calibrate(Receiver &receiver)
 {
     // receiver.printChannel(5);
     // receiver.printChannel(13);
@@ -48,6 +41,7 @@ void FlightController::calibrate()
     }
 }
 
+/*
 void FlightController::executeAngle()
 {
     leds.indicateBattery(11.9);
@@ -56,8 +50,6 @@ void FlightController::executeAngle()
 
     imu.update();
     receiver.update();
-    baro.update();
-
     updateArmState();
 
 
@@ -104,19 +96,23 @@ void FlightController::executeAngle()
     lastTime = micros();
     this->dt = dt_us / 1000000.f;
 }
-
-void FlightController::executeRate()
+*/
+void FlightController::executeRate(IMU &imu, Receiver &receiver, LED &leds)
 {
     leds.indicateBattery(11.9);
     leds.indicateFaults(2);
     leds.indicateGPS(0);
 
-    imu.update();
-    receiver.update();
-    baro.update();
-
-    updateArmState();
+    updateArmState(receiver);
     // Serial.println(armed);
+
+    this->currentYawRate = imu.getYawRate();
+    this->currentPitchRate = imu.getPitchRate();
+    this->currentRollRate = imu.getRollRate();
+    
+    this->currentRollAngle = imu.getRollAngle(); //TODO: IMU class needs filtering
+    this->currentPitchAngle = imu.getPitchAngle();
+
     this->requestedRollAngle = receiver.getRoll();
     this->requestedPitchAngle = receiver.getPitch();
     this->requestedYaw = receiver.getYaw();
@@ -124,11 +120,6 @@ void FlightController::executeRate()
 
     float requestedRollRate = requestedRollAngle * 3;   // 6 to make 300 dps
     float requestedPitchRate = requestedPitchAngle * 3; // 6 to make 300dps
-    this->currentYawRate = imu.getYawRate();
-    this->currentPitchRate = imu.getPitchRate();
-    this->currentRollRate = imu.getRollRate();
-    this->currentRollAngle = imu.getRollAngle();
-    this->currentPitchAngle = imu.getPitchAngle();
 
     if(requestedThrottle < 1000){
         pitchRatePID.resetPID();
@@ -139,8 +130,8 @@ void FlightController::executeRate()
     float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
     float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
     
-    logData(this->dt, requestedRollRate, requestedPitchRate,
-        requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
+    //logData(this->dt, requestedRollRate, requestedPitchRate,
+    //    requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
 
     updateFaults();
     if (!armed)
@@ -151,9 +142,7 @@ void FlightController::executeRate()
 
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
 
-    while (micros() - lastTime < 4000)
-    {
-    }
+    while (micros() - lastTime < 4000) {}
 
     dt_us = (micros() - lastTime);
     lastTime = micros();
@@ -176,7 +165,7 @@ bool FlightController::isArmed()
  * Disarming happens immediately when the switch goes OFF or the link is lost.
  */
 
-void FlightController::updateArmState()
+void FlightController::updateArmState(Receiver &receiver)
 {
     bool armSwitchOn = receiver.isLinkUp() && receiver.getSA() < ARM_SWITCH_THRESHOLD;
 
@@ -222,6 +211,7 @@ int FlightController::disarm()
 
 void FlightController::updateFaults() {}
 
+/* BROKEN, needs fixing
 void FlightController::logData(float dt, float requestedRoll, float requestedPitch, float requestedYaw,
                                float rollRate, float pitchRate, float yawRate)
 {
@@ -287,6 +277,7 @@ void FlightController::logData(float dt, float requestedRoll, float requestedPit
         }
     }
 }
+    */
 void FlightController::executeAutonomous()
 {
 }
