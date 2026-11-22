@@ -12,9 +12,9 @@ class Barometer{
         void update();
         void begin();
 
-        float getAltitude(float pressure); //Units: Feet
-        float getPressure(); //Units: inHg
-        float getTemperature(); //Units: F
+        float getAltitude(float pressure); //Units: meters above the startup altitude
+        float getPressure(); //Units: hPa
+        float getTemperature(); //Units: C
 
         void printAll();
     private:

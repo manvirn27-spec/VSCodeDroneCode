@@ -1,30 +1,42 @@
 #include <Arduino.h>
+#include <TelemetryFields.h>
 
+// Stands in for the flight controller so the LoRa link can be tested on the bench.
 #define POT_PIN 27
 #define TX_PIN 14
+// Must match ESP_BAUD in Sender.cpp.
+#define TELEM_BAUD 115200
 
 void setup() {
   Serial.begin(115200);
-  Serial2.begin(9600, SERIAL_8N1, -1, TX_PIN);
+  Serial2.begin(TELEM_BAUD, SERIAL_8N1, -1, TX_PIN);
 }
 
 void loop() {
-  uint32_t potMv = analogReadMilliVolts(POT_PIN);
-
   // Fake flight data so the signed fields carry changing, negative values.
-  unsigned long uptimeMs = millis();
-  float t = uptimeMs / 1000.0f;
-  int roll = 1500 * sinf(t);
-  int pitch = 800 * cosf(t);
-  int yaw = (uptimeMs / 10) % 36000 - 18000;
-  long altitudeCm = 1000 + 1500 * sinf(t / 4);
+  TelemetryFields fields = {};
+  fields.uptimeMs = millis();
+  float t = fields.uptimeMs / 1000.0f;
+  fields.armed = (fields.uptimeMs / 10000) % 2;
+  // The pot stands in for the throttle stick.
+  fields.throttleUs = 1000 + analogReadMilliVolts(POT_PIN) * 1000 / 3300;
+  fields.rollCentideg = 1500 * sinf(t);
+  fields.pitchCentideg = 800 * cosf(t);
+  fields.rollRateDecidps = 1500 * cosf(t);
+  fields.pitchRateDecidps = -800 * sinf(t);
+  fields.yawRateDecidps = 3000 * sinf(t / 2);
+  fields.rollRateSetDecidps = 1600 * cosf(t);
+  fields.pitchRateSetDecidps = -900 * sinf(t);
+  fields.yawRateSetDecidps = 3200 * sinf(t / 2);
+  fields.rollPidOutput = (fields.rollRateSetDecidps - fields.rollRateDecidps) * 0.45f / 10;
+  fields.pitchPidOutput = (fields.pitchRateSetDecidps - fields.pitchRateDecidps) * 0.45f / 10;
+  fields.yawPidOutput = (fields.yawRateSetDecidps - fields.yawRateDecidps) * 3 / 10;
+  fields.altitudeCm = 1000 + 1500 * sinf(t / 4);
 
-  // Must match the field order the sender expects:
-  // uptimeMs,rollCentideg,pitchCentideg,yawCentideg,altitudeCm,batteryMv
-  char line[64];
-  snprintf(line, sizeof(line), "%lu,%d,%d,%d,%ld,%lu", uptimeMs, roll, pitch, yaw,
-           altitudeCm, (unsigned long)potMv);
-  Serial2.println(line);
-  Serial.println(line);
+  char line[TELEMETRY_LINE_MAX + 1];
+  if (formatTelemetryLine(line, sizeof(line), fields) > 0) {
+    Serial2.println(line);
+    Serial.println(line);
+  }
   delay(50);
 }

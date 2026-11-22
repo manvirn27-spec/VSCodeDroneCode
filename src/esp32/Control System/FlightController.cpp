@@ -11,6 +11,7 @@ void FlightController::begin(){
     imu.setupIMU();
     baro.begin();
     receiver.begin();
+    telem.begin();
 }
 
 void FlightController::executeAngle(){
@@ -27,6 +28,7 @@ void FlightController::executeAngle(){
     //Serial.println(armed);
     if (!armed) {
         motorMixer.stopMotors();
+        sendTelemetry();
         return;
     }
     updateFaults();
@@ -42,14 +44,15 @@ void FlightController::executeAngle(){
     this->currentRollAngle = imu.getRollAngle();
     this->currentPitchAngle = imu.getPitchAngle();
 
-    float requestedRollRate = rollAnglePID.exePID(requestedRollAngle - currentRollAngle);
-    float requestedPitchRate = pitchAnglePID.exePID(requestedPitchAngle - currentPitchAngle);
+    requestedRollRate = rollAnglePID.exePID(requestedRollAngle - currentRollAngle);
+    requestedPitchRate = pitchAnglePID.exePID(requestedPitchAngle - currentPitchAngle);
 
-    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
-    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
-    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
+    pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
+    rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
+    yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
 
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
+    sendTelemetry();
 }
 
 void FlightController::executeRate(){
@@ -67,6 +70,7 @@ void FlightController::executeRate(){
     //Serial.println(armed);
     if (!armed) {
         motorMixer.stopMotors();
+        sendTelemetry();
         return;
     }
     updateFaults();
@@ -82,12 +86,12 @@ void FlightController::executeRate(){
     this->currentRollAngle = imu.getRollAngle();
     this->currentPitchAngle = imu.getPitchAngle();
 
-    float requestedRollRate = requestedRollAngle * 6; //6 to make 300 dps
-    float requestedPitchRate = requestedPitchAngle * 6; //6 to make 300dps
+    requestedRollRate = requestedRollAngle * 6; //6 to make 300 dps
+    requestedPitchRate = requestedPitchAngle * 6; //6 to make 300dps
 
-    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
-    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
-    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
+    pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
+    rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
+    yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
 
     //Serial.printf("Pitch error: %f, Roll error: %f, Yaw Error: %f \n", 
     //    requestedPitchRate - currentPitchRate, requestedRollRate - currentRollRate, requestedYaw, currentYawRate);
@@ -95,6 +99,7 @@ void FlightController::executeRate(){
                 requestedYaw - currentYawRate, currentRollRate, currentPitchRate, currentYawRate);
                 
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
+    sendTelemetry();
 }
 
 bool FlightController::isArmed(){
@@ -144,7 +149,34 @@ void FlightController::arm(){
 int FlightController::disarm(){
     armed = false;
     motorMixer.stopMotors();
+    // Telemetry still reports these while disarmed, so they must not keep the last flight values.
+    requestedRollRate = requestedPitchRate = requestedYaw = 0;
+    rollOutput = pitchOutput = yawOutput = 0;
     return 0;
+}
+
+void FlightController::sendTelemetry(){
+    if (!telem.isDue()) {
+        return;
+    }
+
+    TelemetryFields fields = {};
+    fields.uptimeMs = millis();
+    fields.armed = armed;
+    fields.throttleUs = toFixedPoint<uint16_t>(receiver.getThrottle(), 1);
+    fields.rollCentideg = toFixedPoint<int16_t>(imu.getRollAngle(), 100);
+    fields.pitchCentideg = toFixedPoint<int16_t>(imu.getPitchAngle(), 100);
+    fields.rollRateDecidps = toFixedPoint<int16_t>(imu.getRollRate(), 10);
+    fields.pitchRateDecidps = toFixedPoint<int16_t>(imu.getPitchRate(), 10);
+    fields.yawRateDecidps = toFixedPoint<int16_t>(imu.getYawRate(), 10);
+    fields.rollRateSetDecidps = toFixedPoint<int16_t>(requestedRollRate, 10);
+    fields.pitchRateSetDecidps = toFixedPoint<int16_t>(requestedPitchRate, 10);
+    fields.yawRateSetDecidps = toFixedPoint<int16_t>(requestedYaw, 10);
+    fields.rollPidOutput = toFixedPoint<int16_t>(rollOutput, 1);
+    fields.pitchPidOutput = toFixedPoint<int16_t>(pitchOutput, 1);
+    fields.yawPidOutput = toFixedPoint<int16_t>(yawOutput, 1);
+    fields.altitudeCm = toFixedPoint<int32_t>(baro.getAltitude(0), 100);
+    telem.send(fields);
 }
 
 void FlightController::updateFaults(){}

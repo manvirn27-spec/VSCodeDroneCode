@@ -13,6 +13,7 @@
 #include "../Peripherals/Receiver.h"
 #include "../Peripherals/Barometer.h"
 #include "../Peripherals/LED.h"
+#include "../Peripherals/TelemComms.h"
 
 class FlightController
 {
@@ -37,6 +38,7 @@ private:
   int disarm();
   void logData(float dt, float errorRoll, float errorPitch, float errorYaw,
                float rollRate, float pitchRate, float yawRate);
+  void sendTelemetry();
 
   void updateFaults();
 
@@ -52,6 +54,7 @@ private:
   Barometer baro;
   Receiver receiver;
   LED leds;
+  TelemComms telem;
 
   MotorMixer motorMixer{39, 40, 41, 42};
   PID rollAnglePID{1.1, 0, 0};
@@ -64,6 +67,12 @@ private:
   double requestedPitchAngle;
   double requestedYaw;
   double requestedThrottle;
+
+  float requestedRollRate;
+  float requestedPitchRate;
+  float rollOutput;
+  float pitchOutput;
+  float yawOutput;
 
   double currentRollRate;
   double currentPitchRate;

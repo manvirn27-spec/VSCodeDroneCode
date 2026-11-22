@@ -1,33 +1,44 @@
-#include <cstdint>
 #ifndef TELEMCOMMS_H
 #define TELEMCOMMS_H
 
+#include <Arduino.h>
+#include <TelemetryFields.h>
+#include <cmath>
+#include <cstdint>
+#include <limits>
+
+// Sends telemetry to the DX-LR30 LoRa sender over a transmit-only UART.
+// Wiring: TX_PIN -> DX-LR30 PB11, plus a shared ground.
 class TelemComms{
     public:
         void begin();
-        void send();
-        void getData();
+        // True once SEND_INTERVAL_MS has passed since the last send().
+        bool isDue();
+        void send(const TelemetryFields& fields);
     private:
-        struct __attribute__((packed)) telem{
+        // Must match ESP_BAUD in the LoRa sender.
+        static constexpr uint32_t BAUD = 115200;
+        static constexpr int TX_PIN = 6;
+        // Twice the LoRa packet rate, so each packet carries a reading under 50 ms old.
+        static constexpr uint32_t SEND_INTERVAL_MS = 50;
 
-            //if we want to optimze, we can pack packetNumber and uptimeMs into 1 uint32_t
-            uint16_t packetNumber; //enough for ~1.8h of uptime
-            uint32_t uptimeMs; //enough for 1000h of uptime, can't use uint16_t bc only enough for 1min of uptime then
-            uint16_t rollPIDOutput;
-            uint16_t pitchPIDOutput;
-            uint16_t requestedRoll;
-            uint16_t requestedPitch;
-            uint16_t currentRollRate;
-            uint16_t currentPitchRate;
-        
-
-            uint8_t batteryMv;
-            uint32_t gpsLongitude;
-            uint32_t gpsLatitude;
-            uint32_t heading;
-
-        };
+        uint32_t lastSendMs = 0;
 };
 
+// Converts `value` to a fixed-point integer `value * scale`, rounded and clamped to T.
+template <typename T>
+T toFixedPoint(double value, double scale){
+    double scaled = value * scale;
+    if (std::isnan(scaled)) {
+        return 0;
+    }
+    if (scaled <= std::numeric_limits<T>::min()) {
+        return std::numeric_limits<T>::min();
+    }
+    if (scaled >= std::numeric_limits<T>::max()) {
+        return std::numeric_limits<T>::max();
+    }
+    return static_cast<T>(std::lround(scaled));
+}
 
 #endif

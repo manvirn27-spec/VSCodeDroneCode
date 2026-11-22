@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <RadioLib.h>
+#include <TelemetryFields.h>
 
 // DX-LR30 dev board wiring between the STM32F103 and the SX1262.
 // SPI1 uses the default pins: PA5 = SCK, PA6 = MISO, PA7 = MOSI.
@@ -24,19 +25,10 @@ constexpr uint16_t LORA_PREAMBLE_LENGTH = 8;
 constexpr float LORA_TCXO_VOLTAGE = 0.0;
 
 // Sent over the air as raw bytes, so both ends must agree on this exact layout.
-// Fields are declared only here; TelemetryPacket and printTelemetry() are generated
-// from this list. Columns: type, name, divisor to display units, decimals, label, unit.
-// type, name, divisor, decimals, label, unit
-#define TELEMETRY_FIELDS(X)                         \
-    X(uint16_t, sequence,      1,    0, "seq",   "") \
-    X(uint32_t, uptimeMs,      1000, 1, "t",     "s") \
-    X(int16_t,  rollCentideg,  100,  2, "roll",  "") \
-    X(int16_t,  pitchCentideg, 100,  2, "pitch", "") \
-    X(int16_t,  yawCentideg,   100,  2, "yaw",   "") \
-    X(int32_t,  altitudeCm,    100,  2, "alt",   "m") \
-    X(uint16_t, batteryMv,     1000, 2, "batt",  "V")
-
+// The fields come from TELEMETRY_FIELDS; sequence is added by the sender so the
+// receiver can count lost packets.
 struct __attribute__((packed)) TelemetryPacket {
+    uint16_t sequence;
 #define X(type, name, divisor, decimals, label, unit) type name;
     TELEMETRY_FIELDS(X)
 #undef X
@@ -44,13 +36,12 @@ struct __attribute__((packed)) TelemetryPacket {
 
 // No trailing newline, so callers can append link stats to the same line.
 inline void printTelemetry(Print& out, const TelemetryPacket& packet) {
-    const char* separator = "";
+    out.print("seq=");
+    out.print(packet.sequence);
 #define X(type, name, divisor, decimals, label, unit)                \
-    out.print(separator);                                            \
-    out.print(label "=");                                            \
+    out.print(" " label "=");                                        \
     out.print(packet.name / static_cast<float>(divisor), decimals); \
-    out.print(unit);                                                 \
-    separator = " ";
+    out.print(unit);
     TELEMETRY_FIELDS(X)
 #undef X
 }
