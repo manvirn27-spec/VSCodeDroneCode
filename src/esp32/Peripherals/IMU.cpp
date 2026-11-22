@@ -5,8 +5,10 @@ IMU::IMU(double alphaGyro){
   this->alphaGyro = alphaGyro;
 }
 
-void IMU::setupIMU(){
+void IMU::begin(){
   Wire.begin(8, 9);
+  Wire.setClock(400000);
+
   if (!imu.begin_I2C(0x6B, &Wire)) {
      Serial.println("Failed to find LSM6DSOX chip");
   }
@@ -38,8 +40,7 @@ void IMU::update(){
 
   pitchAngle = -atan(accel.acceleration.y/sqrt(accel.acceleration.x*accel.acceleration.x+accel.acceleration.z*accel.acceleration.z))/(3.142/180);
   rollAngle = -atan(accel.acceleration.x/sqrt(accel.acceleration.y*accel.acceleration.y+accel.acceleration.z*accel.acceleration.z))/(3.142/180);
-
-  //filter the rollangle using Kalman
+  //filter the rollangle using Kalman using gyro data
 }
 void IMU::calibrateIMU(){
 

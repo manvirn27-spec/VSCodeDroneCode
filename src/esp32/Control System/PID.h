@@ -21,7 +21,10 @@ private:
   double P;
   double I;
   double D;
+
   double lastI;
+  float maxI = 250.f;
+
   double lastError;
   double totalError;
   double dt;

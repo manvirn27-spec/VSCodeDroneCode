@@ -1,108 +1,170 @@
 #include "FlightController.h"
 
-void FlightController::begin(){
-    delay(3000); //to let user put the drone down
-
+void FlightController::begin()
+{
+    motorMixer.begin();
+    motorMixer.stopMotors();
+    
+    Serial.println("Beginning");
     leds.begin();
     leds.indicateStartup();
-    motorMixer.calibrateMotors();
-    motorMixer.stopMotors();
 
-    imu.setupIMU();
+    imu.begin();
     baro.begin();
     receiver.begin();
     telem.begin();
 }
 
-void FlightController::executeAngle(){
+void FlightController::calibrate(Receiver &receiver)
+{
+    // receiver.printChannel(5);
+    // receiver.printChannel(13);
+    // receiver.printChannel(14);
+    // receiver.printChannel(15);
+    // receiver.printChannel(16);
+    // Serial.printf("armed:  %i \n", isArmed());
+    // Serial.printf("Throttle down: %i \n", receiver.getThrottle() <= 1050);
+    if ((receiver.getThrottle() <= 1050 && isArmed() == false && armedOnce == false && receiver.rightBumperPressed() && calibrated == false))
+    {
+        if (timeCalibrated == -1)
+        {
+            timeCalibrated = 0;
+            // Serial.print("beginning calibration");
+            motorMixer.calibrateMotors();
+        }
+        else if (timeCalibrated == 0)
+        {
+            timeCalibrated = millis();
+            Serial.print(timeCalibrated);
+        }
+        else if (millis() - timeCalibrated >= 3000 && calibrated == false)
+        {
+
+            calibrated = true;
+            // Serial.print("calibrated");
+        }
+    }
+}
+
+/*
+void FlightController::executeAngle()
+{
     leds.indicateBattery(11.9);
     leds.indicateFaults(2);
     leds.indicateGPS(0);
-    
 
     imu.update();
     receiver.update();
-    baro.update();
-
     updateArmState();
-    //Serial.println(armed);
-    if (!armed) {
-        motorMixer.stopMotors();
-        sendTelemetry();
-        return;
+
+    // get angles and angular velocity readings from drone
+    this->currentYawRate = imu.getYawRate();
+    this->currentPitchRate = imu.getPitchRate();
+    this->currentRollRate = imu.getRollRate();
+    this->currentRollAngle = imu.getRollAngle(); // TODO: IMU class needs filtering
+    this->currentPitchAngle = imu.getPitchAngle();
+
+    // get angle and angular velocity inputs from controller
+    this->requestedRollAngle = receiver.getRoll();
+    this->requestedPitchAngle = receiver.getPitch();
+    this->requestedYaw = receiver.getYaw();
+    this->requestedThrottle = receiver.getThrottle();
+
+    // calculate the goal rates given the current error
+    float requestedRollRate = rollAnglePID.exePID(requestedRollAngle - currentRollAngle, dt);
+    float requestedPitchRate = pitchAnglePID.exePID(requestedPitchAngle - currentPitchAngle, dt);
+
+    if (requestedThrottle < 1000)
+    {
+        pitchRatePID.resetPID();
+        rollRatePID.resetPID();
+        yawRatePID.resetPID();
     }
+    // calculate the output on the motors based on the error of the goal rate and the current rate
+    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
+    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
+    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
+
+    logData(this->dt, requestedRollRate, requestedPitchRate,
+            requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
+
     updateFaults();
+    dt_us = (micros() - lastTime);
+    lastTime = micros();
+    this->dt = dt_us / 1000000.f;
+    if (!armed)
+    {
+        motorMixer.stopMotors();
+        return; //----------------NOTE: EVERYTHING UNDER DOESN'T RUN IF NOT ARMED
+    }
+
+    motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
+
+    while (micros() - lastTime < 4000)
+    {
+    }
+}
+*/
+void FlightController::executeRate(IMU &imu, Receiver &receiver, LED &leds)
+{
+    leds.indicateBattery(11.9);
+    leds.indicateFaults(2);
+    leds.indicateGPS(0);
+
+    updateArmState(receiver);
+    // Serial.println(armed);
+
+    this->currentYawRate = imu.getYawRate();
+    this->currentPitchRate = imu.getPitchRate();
+    this->currentRollRate = imu.getRollRate();
+    
+    this->currentRollAngle = imu.getRollAngle(); //TODO: IMU class needs filtering
+    this->currentPitchAngle = imu.getPitchAngle();
 
     this->requestedRollAngle = receiver.getRoll();
     this->requestedPitchAngle = receiver.getPitch();
     this->requestedYaw = receiver.getYaw();
     this->requestedThrottle = receiver.getThrottle();
 
-    this->currentYawRate = imu.getYawRate();
-    this->currentPitchRate = imu.getPitchRate();
-    this->currentRollRate = imu.getRollRate();
-    this->currentRollAngle = imu.getRollAngle();
-    this->currentPitchAngle = imu.getPitchAngle();
+    float requestedRollRate = requestedRollAngle * 3;   // 6 to make 300 dps
+    float requestedPitchRate = requestedPitchAngle * 3; // 6 to make 300dps
 
-    requestedRollRate = rollAnglePID.exePID(requestedRollAngle - currentRollAngle);
-    requestedPitchRate = pitchAnglePID.exePID(requestedPitchAngle - currentPitchAngle);
-
-    pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
-    rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
-    yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
-
-    motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
-    sendTelemetry();
-}
-
-void FlightController::executeRate(){
-    dt = 0;
-    leds.indicateBattery(11.9);
-    leds.indicateFaults(2);
-    leds.indicateGPS(0);
-    
-
-    imu.update();
-    receiver.update();
-    baro.update();
-
-    updateArmState();
-    //Serial.println(armed);
-    if (!armed) {
-        motorMixer.stopMotors();
-        sendTelemetry();
-        return;
+    if (requestedThrottle < 1000)
+    {
+        pitchRatePID.resetPID();
+        rollRatePID.resetPID();
+        yawRatePID.resetPID();
+        pitchAnglePID.resetPID();
+        rollAnglePID.resetPID();
     }
+    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
+    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
+    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
+    
+    //logData(this->dt, requestedRollRate, requestedPitchRate,
+    //    requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
+
     updateFaults();
+    dt_us = (micros() - lastTime);
+    lastTime = micros();
+    this->dt = dt_us / 1000000.f;
+    if (!armed)
+    {
+        motorMixer.stopMotors();
+        return; //----------------NOTE: EVERYTHING UNDER DOESN'T RUN IF NOT ARMED
+    }
 
-    this->requestedRollAngle = receiver.getRoll();
-    this->requestedPitchAngle = receiver.getPitch();
-    this->requestedYaw = receiver.getYaw();
-    this->requestedThrottle = receiver.getThrottle();
-
-    this->currentYawRate = imu.getYawRate();
-    this->currentPitchRate = imu.getPitchRate();
-    this->currentRollRate = imu.getRollRate();
-    this->currentRollAngle = imu.getRollAngle();
-    this->currentPitchAngle = imu.getPitchAngle();
-
-    requestedRollRate = requestedRollAngle * 6; //6 to make 300 dps
-    requestedPitchRate = requestedPitchAngle * 6; //6 to make 300dps
-
-    pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate);
-    rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate);
-    yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate);
-
-    //Serial.printf("Pitch error: %f, Roll error: %f, Yaw Error: %f \n", 
-    //    requestedPitchRate - currentPitchRate, requestedRollRate - currentRollRate, requestedYaw, currentYawRate);
-    logData(dt, requestedRollRate - currentRollAngle, requestedPitchRate - currentPitchRate,
-                requestedYaw - currentYawRate, currentRollRate, currentPitchRate, currentYawRate);
-                
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
-    sendTelemetry();
+
+    while (micros() - lastTime < 4000) {}
+
+    dt_us = (micros() - lastTime);
+    lastTime = micros();
+    this->dt = dt_us / 1000000.f;
 }
 
-bool FlightController::isArmed(){
+bool FlightController::isArmed()
+{
     return armed;
 }
 
@@ -117,17 +179,23 @@ bool FlightController::isArmed(){
  * Disarming happens immediately when the switch goes OFF or the link is lost.
  */
 
-void FlightController::updateArmState(){
+void FlightController::updateArmState(Receiver &receiver)
+{
     bool armSwitchOn = receiver.isLinkUp() && receiver.getSA() < ARM_SWITCH_THRESHOLD;
 
-    if (armed) {
-        if (!armSwitchOn) {
+    if (armed)
+    {
+        if (!armSwitchOn)
+        {
             disarm();
         }
-    } else {
+    }
+    else
+    {
         bool switchJustTurnedOn = armSwitchOn && !armSwitchWasOn;
         bool throttleLow = receiver.getThrottle() < ARM_THROTTLE_MAX;
-        if (switchJustTurnedOn && throttleLow) {
+        if (switchJustTurnedOn && throttleLow)
+        {
             arm();
         }
     }
@@ -135,7 +203,8 @@ void FlightController::updateArmState(){
     armSwitchWasOn = armSwitchOn;
 }
 
-void FlightController::arm(){
+void FlightController::arm()
+{
     // Clear any accumulated integral / derivative history so the first
     // control outputs after arming start from a clean state.
     rollAnglePID.resetPID();
@@ -144,9 +213,11 @@ void FlightController::arm(){
     pitchRatePID.resetPID();
     yawRatePID.resetPID();
     armed = true;
+    armedOnce = true;
 }
 
-int FlightController::disarm(){
+int FlightController::disarm()
+{
     armed = false;
     motorMixer.stopMotors();
     // Telemetry still reports these while disarmed, so they must not keep the last flight values.
@@ -155,92 +226,81 @@ int FlightController::disarm(){
     return 0;
 }
 
-void FlightController::sendTelemetry(){
-    if (!telem.isDue()) {
-        return;
-    }
+void FlightController::updateFaults() {}
 
-    TelemetryFields fields = {};
-    fields.uptimeMs = millis();
-    fields.armed = armed;
-    fields.throttleUs = toFixedPoint<uint16_t>(receiver.getThrottle(), 1);
-    fields.rollCentideg = toFixedPoint<int16_t>(imu.getRollAngle(), 100);
-    fields.pitchCentideg = toFixedPoint<int16_t>(imu.getPitchAngle(), 100);
-    fields.rollRateDecidps = toFixedPoint<int16_t>(imu.getRollRate(), 10);
-    fields.pitchRateDecidps = toFixedPoint<int16_t>(imu.getPitchRate(), 10);
-    fields.yawRateDecidps = toFixedPoint<int16_t>(imu.getYawRate(), 10);
-    fields.rollRateSetDecidps = toFixedPoint<int16_t>(requestedRollRate, 10);
-    fields.pitchRateSetDecidps = toFixedPoint<int16_t>(requestedPitchRate, 10);
-    fields.yawRateSetDecidps = toFixedPoint<int16_t>(requestedYaw, 10);
-    fields.rollPidOutput = toFixedPoint<int16_t>(rollOutput, 1);
-    fields.pitchPidOutput = toFixedPoint<int16_t>(pitchOutput, 1);
-    fields.yawPidOutput = toFixedPoint<int16_t>(yawOutput, 1);
-    fields.altitudeCm = toFixedPoint<int32_t>(baro.getAltitude(0), 100);
-    telem.send(fields);
-}
-
-void FlightController::updateFaults(){}
-
-void FlightController::logData(float dt, float errorRoll, float errorPitch, float errorYaw, 
-                                    float rollRate, float pitchRate, float yawRate){
-    if(receiver.getSB()){
-        if(!alreadyLogged){
-            if(millis() - lastTimeLog > thresholdLog){
+/* BROKEN, needs fixing
+void FlightController::logData(float dt, float requestedRoll, float requestedPitch, float requestedYaw,
+                               float rollRate, float pitchRate, float yawRate)
+{
+    if (receiver.getSB() == -1)
+    {
+        if (!alreadyLogged)
+        {
+            if (millis() - lastTimeLog > thresholdLog)
+            {
                 lastTimeLog = millis();
-                if (numberOfLogs >= 1000){
+                if (numberOfLogs >= 1000)
+                {
                     alreadyLogged = true;
                     return;
                 }
                 dtTelemetry[numberOfLogs] = dt;
-                errorTelemetry[numberOfLogs][0] = errorRoll;
-                errorTelemetry[numberOfLogs][1] = errorPitch;
-                errorTelemetry[numberOfLogs][2] = errorYaw;
+
+                errorTelemetry[numberOfLogs][0] = requestedRoll;
+                errorTelemetry[numberOfLogs][1] = rollRate;
+                errorTelemetry[numberOfLogs][2] = requestedPitch;
+                errorTelemetry[numberOfLogs][3] = pitchRate;
+                errorTelemetry[numberOfLogs][4] = requestedYaw;
+                errorTelemetry[numberOfLogs][5] = yawRate;
+
                 rateTelemetry[numberOfLogs][0] = rollRate;
                 rateTelemetry[numberOfLogs][1] = pitchRate;
                 rateTelemetry[numberOfLogs][2] = yawRate;
 
                 numberOfLogs++;
-
             }
-        } 
-        if(!alreadyPrinted && receiver.rightBumperPressed()){
-            alreadyPrinted = true;
-            switch(static_cast<int>(receiver.rightBumperPressed())){
-                case 1:
-                    Serial.println("DT:");
-                    for(int i = 0; i < 1000; i++){
-                        Serial.printf("%.6f \n", dtTelemetry[i]);
-                    }
-                    break;
-                case 0:
-                    Serial.println("Error:");
-                    for(int i = 0; i < 1000; i++){
-                        Serial.printf("%.6f, %.6f, %.6f \n",
-                             errorTelemetry[i][0], errorTelemetry[i][1], errorTelemetry[i][2]);
-                    }
-                    break;
-                case -1:
-                    Serial.println("Rates:");
-                    for(int i = 0; i < 1000; i++){
-                        Serial.printf("%.6f, %.6f, %.6f \n",
-                             rateTelemetry[i][0], rateTelemetry[i][1], rateTelemetry[i][2]);
-                    }
-                    break;
+        }
+    }
+    if (receiver.rightBumperPressed() && !alreadyPrinted)
+    {
+        alreadyPrinted = true;
+        switch (static_cast<int>(receiver.getSD()))
+        {
+        case 1:
+            Serial.println("DT:");
+            for (int i = 0; i < 1000; i++)
+            {
+                Serial.printf("%.6f \n", dtTelemetry[i]);
             }
-        }   
+            break;
+        case 0:
+            Serial.println("Error:");
+            for (int i = 0; i < 1000; i++)
+            {
+                Serial.printf("R_Req: %.6f, R_Act: %.6f | P_Req: %.6f, P_Act: %.6f | Y_Req: %.6f, Y_Act: %.6f\n",
+                              errorTelemetry[i][0], errorTelemetry[i][1],
+                              errorTelemetry[i][2], errorTelemetry[i][3],
+                              errorTelemetry[i][4], errorTelemetry[i][5]);
+            }
+            break;
+        case -1:
+            Serial.println("Rates:");
+            for (int i = 0; i < 1000; i++)
+            {
+                Serial.printf("%.6f, %.6f, %.6f \n",
+                              rateTelemetry[i][0], rateTelemetry[i][1], rateTelemetry[i][2]);
+            }
+            break;
+        }
     }
 }
-void FlightController::executeAutonomous(){
-
+    */
+void FlightController::executeAutonomous()
+{
 }
-void FlightController::executeHoldPosition(){
-
+void FlightController::executeHoldPosition()
+{
 }
-void FlightController::executeRTH(){
-
+void FlightController::executeRTH()
+{
 }
-
-
-
-
-

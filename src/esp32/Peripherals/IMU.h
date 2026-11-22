@@ -12,7 +12,7 @@ class IMU{
   public:
     IMU(double alpha);
     void update();
-    void setupIMU();
+    void begin();
     void calibrateIMU();
 
     double getRollRate();

@@ -21,6 +21,7 @@ public:
   void update();
   void begin();
   bool isLinkUp();
+  void printChannel(int channel);
 
   void printAll();
 

@@ -56,8 +56,21 @@ double PID::exePID(double error, double dt2)
 {
   double result = 0;
   double pResult = error * P;
-  double dResult = (error - lastError) / dt2;
-  double iResult = error * I + lastI;
+  double dResult = D * (error - lastError) / dt2;
+
+  totalError = totalError + (error * dt2);
+  double iResult = totalError * I;
+
+  if (iResult > maxI)
+  {
+    iResult = maxI;
+    totalError = maxI / I;
+  }
+  else if (iResult < -maxI)
+  {
+    iResult = -maxI;
+    totalError = -maxI / I;
+  }
   result = pResult + dResult + iResult;
 
   lastError = error;
@@ -74,7 +87,8 @@ double PID::exePID(double error)
   unsigned long now = millis();
   double dt = (now - lastTime) / 1000.0; // seconds since last call
   lastTime = now;
-  if (dt <= 0) dt = 0.004; // avoid divide-by-zero on the first / back-to-back calls
+  if (dt <= 0)
+    dt = 0.004; // avoid divide-by-zero on the first / back-to-back calls
 
   double result = 0;
   double pResult = error * P;
@@ -82,18 +96,29 @@ double PID::exePID(double error)
 
   totalError = totalError + error * dt;
   double iResult = totalError * I;
+  if (iResult > maxI)
+  {
+    iResult = maxI;
+    totalError = maxI / I;
+  }
+  else if (iResult < -maxI)
+  {
+    iResult = -maxI;
+    totalError = -maxI / I;
+  }
   result = pResult + dResult + iResult;
 
-  //Debug print
-    Serial.printf("dt: %.6f \n", dt);
+  // Debug print
+  //  Serial.printf("dt: %.6f \n", dt);
 
   lastError = error;
   return result;
 }
+
 void PID::resetPID()
 {
   lastI = 0;
-  lastError = 0;
   totalError = 0;
+  lastError = 0;
   lastTime = millis(); // so the first dt after a reset is small, not the whole disarmed period
 }

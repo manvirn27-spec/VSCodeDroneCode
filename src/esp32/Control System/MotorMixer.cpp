@@ -1,60 +1,106 @@
 #include "MotorMixer.h"
-#include <ESP32Servo.h>
+#include "driver/ledc.h"
+#include <Arduino.h>
 
-MotorMixer::MotorMixer(int mot1, int mot2, int mot3, int mot4) {
-    motors[0].attach(mot1);
-    motors[1].attach(mot2);
-    motors[2].attach(mot3);
-    motors[3].attach(mot4);
+MotorMixer::MotorMixer()
+{
 }
 
-void MotorMixer::spinMotors(int throttle, int rollControl, int pitchControl, int yawControl){
+void MotorMixer::begin(){ //ensure this is the FIRST line called EVERY TIME
+  delay(1000);
+  ledcSetup(0, freq, resolution);
+  ledcAttachPin(39, 0);
+
+  ledcSetup(1, freq, resolution);
+  ledcAttachPin(40, 1);
+
+  ledcSetup(2, freq, resolution);
+  ledcAttachPin(41, 2);
+
+
+  ledcSetup(3, freq, resolution);
+  ledcAttachPin(42, 3);
+
+  uint32_t duty1 = (1000 / 20000.0) * ((1 << resolution) - 1);
+  
+  ledcWrite(0, duty1);
+  ledcWrite(1, duty1);
+  ledcWrite(2, duty1);
+  ledcWrite(3, duty1);
+
+  delay(3000);
+}
+
+void MotorMixer::spinMotors(int throttle, int rollControl, int pitchControl, int yawControl)
+{
   float MotorInput1;
   float MotorInput2;
   float MotorInput3;
   float MotorInput4;
 
-  if (throttle > 1800) throttle = 1800;
-  MotorInput1= 1.024*(throttle+rollControl-pitchControl-yawControl);
-  MotorInput2= 1.024*(throttle+rollControl+pitchControl+yawControl);
-  MotorInput3= 1.024*(throttle-rollControl-pitchControl+yawControl);
-  MotorInput4= 1.024*(throttle-rollControl+pitchControl-yawControl);
+  if (throttle > 1800)
+    throttle = 1800;
+  MotorInput1 = 1.024 * (throttle + rollControl - pitchControl + yawControl); //yaw was -
+  MotorInput2 = 1.024 * (throttle + rollControl + pitchControl - yawControl); //yaw was +
+  MotorInput3 = 1.024 * (throttle - rollControl - pitchControl - yawControl); //yaw was +
+  MotorInput4 = 1.024 * (throttle - rollControl + pitchControl + yawControl); //yaw was -
 
-  if (MotorInput1 > 2000)MotorInput1 = 1999;
-  if (MotorInput2 > 2000)MotorInput2 = 1999; 
-  if (MotorInput3 > 2000)MotorInput3 = 1999; 
-  if (MotorInput4 > 2000)MotorInput4 = 1999;
+  if (MotorInput1 > 2000)
+    MotorInput1 = 1999;
+  if (MotorInput2 > 2000)
+    MotorInput2 = 1999;
+  if (MotorInput3 > 2000)
+    MotorInput3 = 1999;
+  if (MotorInput4 > 2000)
+    MotorInput4 = 1999;
 
-  int ThrottleIdle=1180;
-  if (MotorInput1 < ThrottleIdle) MotorInput1 =  ThrottleIdle;
-  if (MotorInput2 < ThrottleIdle) MotorInput2 =  ThrottleIdle;
-  if (MotorInput3 < ThrottleIdle) MotorInput3 =  ThrottleIdle;
-  if (MotorInput4 < ThrottleIdle) MotorInput4 =  ThrottleIdle;
+  int ThrottleIdle = 1180;
+  if (MotorInput1 < ThrottleIdle)
+    MotorInput1 = ThrottleIdle;
+  if (MotorInput2 < ThrottleIdle)
+    MotorInput2 = ThrottleIdle;
+  if (MotorInput3 < ThrottleIdle)
+    MotorInput3 = ThrottleIdle;
+  if (MotorInput4 < ThrottleIdle)
+    MotorInput4 = ThrottleIdle;
 
-/*Debug Prints:*/
-  //Serial.printf("Mot1: %f, Mot2: %f, Mot3: %f, Mot 4: %f \n", 
-  //  MotorInput1, MotorInput2, MotorInput3, MotorInput4);
+  /*Debug Prints:
+  Serial.printf("Mot1: %f, Mot2: %f, Mot3: %f, Mot 4: %f \n",
+    MotorInput1, MotorInput2, MotorInput3, MotorInput4);
+*/
 
-  motors[0].writeMicroseconds(MotorInput1);
-  motors[1].writeMicroseconds(MotorInput2);
-  motors[2].writeMicroseconds(MotorInput3); 
-  motors[3].writeMicroseconds(MotorInput4);
+  uint32_t duty1 = (MotorInput1 / 20000.0) * ((1 << resolution) - 1);
+  uint32_t duty2 = (MotorInput2 / 20000.0) * ((1 << resolution) - 1);
+  uint32_t duty3 = (MotorInput3 / 20000.0) * ((1 << resolution) - 1);
+  uint32_t duty4 = (MotorInput4 / 20000.0) * ((1 << resolution) - 1);
+  
+  ledcWrite(0, duty1);
+  ledcWrite(1, duty2);
+  ledcWrite(2, duty3);
+  ledcWrite(3, duty4);
 }
 
-// Commands all motors to the cutoff value (used while disarmed).
-void MotorMixer::stopMotors(){
-  for(int i = 0; i < 4; i++){
-    motors[i].writeMicroseconds(1000);
-  }
+void MotorMixer::stopMotors()
+{
+  uint32_t duty = (1000.f / 20000.0) * ((1 << resolution) - 1);
+  
+  ledcWrite(0, duty);
+  ledcWrite(1, duty);
+  ledcWrite(2, duty);
+  ledcWrite(3, duty);
 }
 
-void MotorMixer::calibrateMotors(){
-  for(int i = 0; i < 4; i++){
-    motors[i].writeMicroseconds(2000);
-  }
+void MotorMixer::calibrateMotors()
+{
+  uint32_t duty = (2000.f / 20000.0) * ((1 << resolution) - 1);
+  ledcWrite(0, duty);
+  ledcWrite(1, duty);
+  ledcWrite(2, duty);
+  ledcWrite(3, duty);
   delay(2000);
-  for(int i = 0; i < 4; i++){
-    motors[i].writeMicroseconds(1000);
-  }
+  duty = (1000.f / 20000.0) * ((1 << resolution) - 1);
+  ledcWrite(0, duty);
+  ledcWrite(1, duty);
+  ledcWrite(2, duty);
+  ledcWrite(3, duty);
 }
-
