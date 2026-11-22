@@ -6,12 +6,6 @@ void FlightController::begin()
     motorMixer.stopMotors();
     
     Serial.println("Beginning");
-    leds.begin();
-    leds.indicateStartup();
-
-    imu.begin();
-    baro.begin();
-    receiver.begin();
     telem.begin();
 }
 
@@ -105,7 +99,7 @@ void FlightController::executeAngle()
     }
 }
 */
-void FlightController::executeRate(IMU &imu, Receiver &receiver, LED &leds)
+void FlightController::executeRate(IMU &imu, Receiver &receiver, LED &leds, Barometer &baro)
 {
     leds.indicateBattery(11.9);
     leds.indicateFaults(2);
@@ -126,8 +120,8 @@ void FlightController::executeRate(IMU &imu, Receiver &receiver, LED &leds)
     this->requestedYaw = receiver.getYaw();
     this->requestedThrottle = receiver.getThrottle();
 
-    float requestedRollRate = requestedRollAngle * 3;   // 6 to make 300 dps
-    float requestedPitchRate = requestedPitchAngle * 3; // 6 to make 300dps
+    requestedRollRate = requestedRollAngle * 3;   // 6 to make 300 dps
+    requestedPitchRate = requestedPitchAngle * 3; // 6 to make 300dps
 
     if (requestedThrottle < 1000)
     {
@@ -137,9 +131,9 @@ void FlightController::executeRate(IMU &imu, Receiver &receiver, LED &leds)
         pitchAnglePID.resetPID();
         rollAnglePID.resetPID();
     }
-    float pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
-    float rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
-    float yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
+    pitchOutput = pitchRatePID.exePID(requestedPitchRate - currentPitchRate, dt);
+    rollOutput = rollRatePID.exePID(requestedRollRate - currentRollRate, dt);
+    yawOutput = yawRatePID.exePID(requestedYaw - currentYawRate, dt);
     
     //logData(this->dt, requestedRollRate, requestedPitchRate,
     //    requestedYaw, currentRollRate, currentPitchRate, currentYawRate);
@@ -151,10 +145,13 @@ void FlightController::executeRate(IMU &imu, Receiver &receiver, LED &leds)
     if (!armed)
     {
         motorMixer.stopMotors();
+        sendTelemetry(baro);
         return; //----------------NOTE: EVERYTHING UNDER DOESN'T RUN IF NOT ARMED
     }
 
     motorMixer.spinMotors(requestedThrottle, rollOutput, pitchOutput, yawOutput);
+    // Before the wait, so the I2C write uses up loop slack instead of stretching the loop.
+    sendTelemetry(baro);
 
     while (micros() - lastTime < 4000) {}
 
@@ -224,6 +221,32 @@ int FlightController::disarm()
     requestedRollRate = requestedPitchRate = requestedYaw = 0;
     rollOutput = pitchOutput = yawOutput = 0;
     return 0;
+}
+
+void FlightController::sendTelemetry(Barometer &baro)
+{
+    if (!telem.isDue())
+    {
+        return;
+    }
+
+    TelemetryFields fields = {};
+    fields.uptimeMs = millis();
+    fields.armed = armed;
+    fields.throttleUs = toFixedPoint<uint16_t>(requestedThrottle, 1);
+    fields.rollCentideg = toFixedPoint<int16_t>(currentRollAngle, 100);
+    fields.pitchCentideg = toFixedPoint<int16_t>(currentPitchAngle, 100);
+    fields.rollRateDecidps = toFixedPoint<int16_t>(currentRollRate, 10);
+    fields.pitchRateDecidps = toFixedPoint<int16_t>(currentPitchRate, 10);
+    fields.yawRateDecidps = toFixedPoint<int16_t>(currentYawRate, 10);
+    fields.rollRateSetDecidps = toFixedPoint<int16_t>(requestedRollRate, 10);
+    fields.pitchRateSetDecidps = toFixedPoint<int16_t>(requestedPitchRate, 10);
+    fields.yawRateSetDecidps = toFixedPoint<int16_t>(requestedYaw, 10);
+    fields.rollPidOutput = toFixedPoint<int16_t>(rollOutput, 1);
+    fields.pitchPidOutput = toFixedPoint<int16_t>(pitchOutput, 1);
+    fields.yawPidOutput = toFixedPoint<int16_t>(yawOutput, 1);
+    fields.altitudeCm = toFixedPoint<int32_t>(baro.getAltitude(0), 100);
+    telem.send(fields);
 }
 
 void FlightController::updateFaults() {}

@@ -22,7 +22,7 @@ public:
   void calibrate(Receiver &receiver);
 
   //void executeAngle();
-  void executeRate(IMU &imu, Receiver &receiver, LED &leds);
+  void executeRate(IMU &imu, Receiver &receiver, LED &leds, Barometer &baro);
 
   void executeHoldPosition();
   void executeAutonomous();
@@ -43,6 +43,7 @@ private:
   //             float rollRate, float pitchRate, float yawRate);
 
 private:
+  void sendTelemetry(Barometer &baro);
   void updateFaults();
 
   int faultNumber = 0;
@@ -56,6 +57,7 @@ private:
   //GPS gps;
 
   MotorMixer motorMixer;
+  TelemComms telem;
   PID rollAnglePID{1.1, 0, 0};
   PID pitchAnglePID{1.1, 0, 0};
   PID rollRatePID{1.3f, 1.2f, 0.003f}; //1.15, 1.2, 0.003

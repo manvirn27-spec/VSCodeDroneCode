@@ -34,7 +34,7 @@ void loop(){
   imu.update();
   receiver.update();
 
-  fc.executeRate(imu, receiver, leds);
+  fc.executeRate(imu, receiver, leds, baro);
 }
 
 

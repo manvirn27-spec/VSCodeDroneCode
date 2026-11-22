@@ -1,8 +1,10 @@
 #include "TelemComms.h"
 
+#include <Wire.h>
+
 void TelemComms::begin(){
-    // UART0 is free because Serial is USB CDC. RX is unused: the LoRa module never replies.
-    Serial0.begin(BAUD, SERIAL_8N1, -1, TX_PIN);
+    Wire1.begin(SDA_PIN, SCL_PIN, I2C_FREQ_HZ);
+    Wire1.setTimeOut(I2C_TIMEOUT_MS);
 }
 
 bool TelemComms::isDue(){
@@ -12,13 +14,11 @@ bool TelemComms::isDue(){
 void TelemComms::send(const TelemetryFields& fields){
     lastSendMs = millis();
 
-    char line[TELEMETRY_LINE_MAX + 1];
-    size_t length = formatTelemetryLine(line, sizeof(line) - 1, fields);
-    if (length == 0) {
-        return;
-    }
-    line[length++] = '\n';
-    // Does not stall the control loop: the line fits in the 128-byte UART FIFO,
-    // and the previous one drained long ago (~10 ms per line at BAUD).
-    Serial0.write(reinterpret_cast<const uint8_t*>(line), length);
+    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(&fields);
+    // Blocks the control loop until the frame is clocked out, under 1 ms at I2C_FREQ_HZ.
+    // A missing or busy LoRa module just drops this reading.
+    Wire1.beginTransmission(TELEMETRY_I2C_ADDRESS);
+    Wire1.write(bytes, sizeof(fields));
+    Wire1.write(telemetryCrc(bytes, sizeof(fields)));
+    Wire1.endTransmission();
 }

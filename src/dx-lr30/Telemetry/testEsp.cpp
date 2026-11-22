@@ -1,15 +1,18 @@
 #include <Arduino.h>
 #include <TelemetryFields.h>
+#include <Wire.h>
 
 // Stands in for the flight controller so the LoRa link can be tested on the bench.
+// Wiring: SDA_PIN -> DX-LR30 PB11, SCL_PIN -> DX-LR30 PB10, with 4.7 kOhm
+// pull-ups to 3.3 V on both lines.
 #define POT_PIN 27
-#define TX_PIN 14
-// Must match ESP_BAUD in Sender.cpp.
-#define TELEM_BAUD 115200
+#define SDA_PIN 14
+#define SCL_PIN 13
+#define I2C_FREQ_HZ 400000
 
 void setup() {
   Serial.begin(115200);
-  Serial2.begin(TELEM_BAUD, SERIAL_8N1, -1, TX_PIN);
+  Wire.begin(SDA_PIN, SCL_PIN, I2C_FREQ_HZ);
 }
 
 void loop() {
@@ -33,10 +36,12 @@ void loop() {
   fields.yawPidOutput = (fields.yawRateSetDecidps - fields.yawRateDecidps) * 3 / 10;
   fields.altitudeCm = 1000 + 1500 * sinf(t / 4);
 
-  char line[TELEMETRY_LINE_MAX + 1];
-  if (formatTelemetryLine(line, sizeof(line), fields) > 0) {
-    Serial2.println(line);
-    Serial.println(line);
-  }
+  const uint8_t* bytes = reinterpret_cast<const uint8_t*>(&fields);
+  Wire.beginTransmission(TELEMETRY_I2C_ADDRESS);
+  Wire.write(bytes, sizeof(fields));
+  Wire.write(telemetryCrc(bytes, sizeof(fields)));
+  uint8_t error = Wire.endTransmission();
+  Serial.printf("t=%lu thr=%u i2c=%s\n", (unsigned long)fields.uptimeMs, fields.throttleUs,
+                error == 0 ? "ok" : "failed");
   delay(50);
 }
