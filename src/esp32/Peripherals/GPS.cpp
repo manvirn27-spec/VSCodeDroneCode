@@ -88,7 +88,7 @@ uint8_t status = 0;
  }
 }
 
-float GPS::getHeading(float x, float y){
+float GPS::getHeading(int16_t x, int16_t y){
   float heading = atan2((float)y, (float)x) * 180/PI;
   if (heading < 0){
      heading += 360.0;

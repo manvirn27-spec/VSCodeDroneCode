@@ -5,14 +5,20 @@
 #include "Peripherals/Barometer.h"
 #include "Peripherals/LED.h"
 #include "Peripherals/Receiver.h"
-#include "Control System/MotorMixer.h"
-#include "Control System/FlightController.h" //Ultimately only include file
+#include "Peripherals/GPS.h"
+
+#include "Control System/FlightController.h"
 
 IMU imu{0.501};
 Barometer baro;
 Receiver receiver;
 FlightController fc;
 LED leds;
+GPS gps;
+
+int16_t compassX;
+int16_t compassY;
+int16_t compassZ;
 
 
 void setup(){
@@ -22,6 +28,7 @@ void setup(){
   imu.begin();
   baro.begin();
   receiver.begin();
+  gps.begin();
 
   leds.begin();
   leds.indicateStartup();
@@ -32,87 +39,8 @@ void setup(){
 void loop(){
   imu.update();
   receiver.update();
+  gps.readCompass(compassX, compassY, compassZ);
+  gps.update();
 
   fc.executeRate(imu, receiver, leds);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-const int freq = 50;       // 50Hz for standard ESCs/servos
-const int resolution = 14; // 14-bit resolution
-
-void setup() {
-  delay(1000);
-  ledcSetup(0, freq, resolution);
-  ledcAttachPin(39, 0);
-
-  ledcSetup(1, freq, resolution);
-  ledcAttachPin(40, 1);
-
-  ledcSetup(2, freq, resolution);
-  ledcAttachPin(41, 2);
-
-
-  ledcSetup(3, freq, resolution);
-  ledcAttachPin(42, 3);
-
-  uint32_t duty1 = (1000 / 20000.0) * ((1 << resolution) - 1);
-  
-  ledcWrite(0, duty1);
-  ledcWrite(1, duty1);
-  ledcWrite(2, duty1);
-  ledcWrite(3, duty1);
-
-  delay(3000);
-}
-
-void loop() {
-  uint32_t duty1 = (1500 / 20000.0) * ((1 << resolution) - 1);
-  ledcWrite(0, duty1);
-  duty1 = (1000 / 20000.0) * ((1 << resolution) - 1);
-  ledcWrite(3, duty1);
-
-  delay(3000);
-
-  duty1 = (1000 / 20000.0) * ((1 << resolution) - 1);
-  ledcWrite(0, duty1);
-  duty1 = (1500 / 20000.0) * ((1 << resolution) - 1);
-  ledcWrite(1, duty1);
-
-  delay(3000);
-
-  duty1 = (1000 / 20000.0) * ((1 << resolution) - 1);
-  ledcWrite(1, duty1);
-  duty1 = (1500 / 20000.0) * ((1 << resolution) - 1);
-  ledcWrite(2, duty1);
-
-  delay(3000);
-
-  duty1 = (1000 / 20000.0) * ((1 << resolution) - 1);
-  ledcWrite(2, duty1);
-  duty1 = (1500 / 20000.0) * ((1 << resolution) - 1);
-  ledcWrite(3, duty1);
-
-  delay(3000);
-}
-*/
