@@ -1,72 +1,93 @@
 #include "IMU.h"
 #include <cmath>
 
-IMU::IMU(double alphaGyro){
+IMU::IMU(double alphaGyro)
+{
   this->alphaGyro = alphaGyro;
 }
 
-void IMU::begin(){
+void IMU::begin()
+{
   Wire.begin(8, 9);
   Wire.setClock(400000);
+  t = 0;
+  gyroRoll = 0;
+  gyroPitch = 0;
+  gyroYaw = 0;
 
-  if (!imu.begin_I2C(0x6B, &Wire)) {
-     Serial.println("Failed to find LSM6DSOX chip");
+  if (!imu.begin_I2C(0x6B, &Wire))
+  {
+    Serial.println("Failed to find LSM6DSOX chip");
   }
   imu.setAccelRange(LSM6DS_ACCEL_RANGE_16_G);
-  imu.setGyroRange(LSM6DS_GYRO_RANGE_2000_DPS );
+  imu.setGyroRange(LSM6DS_GYRO_RANGE_2000_DPS);
   imu.setAccelDataRate(LSM6DS_RATE_833_HZ);
   imu.setGyroDataRate(LSM6DS_RATE_833_HZ);
 }
 
-
-
-void IMU::update(){
+void IMU::update()
+{
   sensors_event_t accel;
   sensors_event_t gyro;
   sensors_event_t temp;
   imu.getEvent(&accel, &gyro, &temp);
   temperature = temp.temperature;
+  float t2 = millis();
+  float dt = t2 - t;
+  t = t2;
+
+  pitchAngle = -atan(accel.acceleration.y / sqrt(accel.acceleration.x * accel.acceleration.x + accel.acceleration.z * accel.acceleration.z)) / (3.142 / 180);
+  rollAngle = -atan(accel.acceleration.x / sqrt(accel.acceleration.y * accel.acceleration.y + accel.acceleration.z * accel.acceleration.z)) / (3.142 / 180);
 
   // 1. Get raw rates in degrees per second
-  float rawRollRate  =  gyro.gyro.y * 180.f/M_PI;
-  float rawPitchRate = -gyro.gyro.x * 180.f/M_PI;
-  float rawYawRate   = -gyro.gyro.z * 180.f/M_PI;
+  float rawRollRate = gyro.gyro.y * 180.f / M_PI;
+  float rawPitchRate = -gyro.gyro.x * 180.f / M_PI;
+  float rawYawRate = -gyro.gyro.z * 180.f / M_PI;
 
   rollRate = rawRollRate * alphaGyro + (1 - alphaGyro) * rollRate;
   pitchRate = rawPitchRate * alphaGyro + (1 - alphaGyro) * pitchRate;
   yawRate = rawYawRate * alphaGyro + (1 - alphaGyro) * yawRate;
-  //Debug print
-  //Serial.println(yawRate);
 
-  pitchAngle = -atan(accel.acceleration.y/sqrt(accel.acceleration.x*accel.acceleration.x+accel.acceleration.z*accel.acceleration.z))/(3.142/180);
-  rollAngle = -atan(accel.acceleration.x/sqrt(accel.acceleration.y*accel.acceleration.y+accel.acceleration.z*accel.acceleration.z))/(3.142/180);
-  //filter the rollangle using Kalman
+  gyroRoll += rollRate * dt;
+  gyroPitch += pitchRate * dt;
+  gyroYaw += yawRate * dt;
+
+  // Debug print
+  // Serial.println(yawRate);
+
+  // filter the rollangle using Kalman
 }
-void IMU::calibrateIMU(){
-
+void IMU::calibrateIMU()
+{
 }
 
-
-double IMU::getRollRate(){
+double IMU::getRollRate()
+{
   return rollRate;
 }
-double IMU::getPitchRate(){
+double IMU::getPitchRate()
+{
   return pitchRate;
 }
-double IMU::getYawRate(){
+double IMU::getYawRate()
+{
   return yawRate;
 }
-double IMU::getRollAngle(){
+double IMU::getRollAngle()
+{
   return rollAngle;
 }
-double IMU::getPitchAngle(){
+double IMU::getPitchAngle()
+{
   return pitchAngle;
 }
-double IMU::getTemperature(){
+double IMU::getTemperature()
+{
   return temperature;
 }
 
-void IMU::printValues(){
-  Serial.printf("Roll Rate: %f, Pitch Rate: %f, Yaw Rate: %f, Roll Angle: %f, Pitch Angle: %f \n", 
-    rollRate, pitchRate, yawRate, rollAngle, pitchAngle);
+void IMU::printValues()
+{
+  Serial.printf("Roll Rate: %f, Pitch Rate: %f, Yaw Rate: %f, Roll Angle: %f, Pitch Angle: %f \n",
+                rollRate, pitchRate, yawRate, rollAngle, pitchAngle);
 }

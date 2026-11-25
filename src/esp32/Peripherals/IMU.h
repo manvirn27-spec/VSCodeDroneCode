@@ -6,39 +6,42 @@
 #include <Adafruit_LSM6DSOX.h>
 #include <Wire.h>
 
+class IMU
+{
+public:
+  IMU(double alpha);
+  void update();
+  void begin();
+  void calibrateIMU();
 
+  double getRollRate();
+  double getPitchRate();
+  double getYawRate();
+  double getRollAngle();
+  double getPitchAngle();
+  double getTemperature();
 
-class IMU{
-  public:
-    IMU(double alpha);
-    void update();
-    void begin();
-    void calibrateIMU();
+  void printValues();
 
-    double getRollRate();
-    double getPitchRate();
-    double getYawRate();
-    double getRollAngle();
-    double getPitchAngle();
-    double getTemperature();
+private:
+  Adafruit_LSM6DSOX imu;
+  float alphaGyro;
+  float t;
+  float rollRate;
+  float pitchRate;
+  float yawRate;
+  float gyroRoll;
+  float gyroPitch;
+  float gyroYaw;
+  float rollAngle;
+  float pitchAngle;
+  float beta = 0.7;
 
-    void printValues();
+  float rateCalibrationRoll;
+  float rateCalibrationPitch;
+  float rateCalibrationYaw;
 
-  private:
-    Adafruit_LSM6DSOX imu;
-    float alphaGyro;
-    
-    float rollRate;
-    float pitchRate;
-    float yawRate;
-    float rollAngle;
-    float pitchAngle;
-
-    float rateCalibrationRoll;
-    float rateCalibrationPitch;
-    float rateCalibrationYaw;
-
-    float temperature;
+  float temperature;
 };
 
 #endif
